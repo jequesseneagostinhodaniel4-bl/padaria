@@ -6,7 +6,6 @@
 <title>Padaria | Gestão Comercial</title>
 <link rel="stylesheet" href="/static/style.css">
 <style>
-  /* LOGIN PROFISSIONAL - CANTO DIREITO */
   .login-bg{
     background-image:url('/static/fundo.jpg'), url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200') !important;
     background-size:cover; background-position:center;
@@ -53,10 +52,12 @@
     width:100% !important; padding:14px !important; border-radius:11px !important;
     background:#2F2A26 !important; font-size:15px !important; font-weight:700 !important;
   }
-  .login-card details{ text-align:left !important; margin-top:14px !important; }
-  .login-card details summary{ cursor:pointer; font-weight:700; color:#8B5E2E; }
   .login-card .pass-wrap{ position:relative; }
   .login-card .pass-wrap .eye{ position:absolute; right:8px; top:8px; background:#eee; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+  .auth-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .auth-tabs button{ flex:1; padding:12px; border-radius:11px; border:1px solid #E5E0D8; background:#f5f1ea; font-weight:700; cursor:pointer; }
+  .auth-tabs button.active{ background:#2F2A26; color:#fff; border-color:#2F2A26; }
+  .link-btn{ background:none; border:none; color:#8B5E2E; font-weight:700; cursor:pointer; margin-top:10px; }
   @media(max-width:700px){
     .login-bg{ justify-content:center !important; padding:16px !important; }
     .login-card{ margin-right:0 !important; width:100% !important; }
@@ -74,12 +75,22 @@
     <p class="sub2" id="dataHoje"></p>
     <div class="login-badge">M-Pesa • e-Mola • WhatsApp • Recibos PDF</div>
     <div id="authSec">
-      <h2>Entrar no Sistema</h2>
-      <input id="loginTel" placeholder="Teu telefone - ex: 840000000" inputmode="numeric">
-      <div class="pass-wrap"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" class="eye" onclick="mostrarSenha('loginSenha', this)">Ver</button></div>
-      <button class="btn-dark" onclick="login()">Entrar</button>
-      <p id="authMsg"></p>
-      <details><summary>Criar Conta Nova</summary>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="active" type="button" onclick="mostrarLogin()">Entrar</button>
+        <button id="tabRegisto" type="button" onclick="mostrarRegisto()">Criar Conta</button>
+      </div>
+      <!-- LOGIN - QUEM JA TEM CONTA, SO COLA NUMERO + SENHA -->
+      <div id="formLogin">
+        <h2>Entrar no Sistema</h2>
+        <p style="text-align:left;font-size:12px;color:#777;margin:-8px 0 10px">Já tens conta? Só cola o teu número + senha.</p>
+        <input id="loginTel" placeholder="Teu telefone - ex: 840000000" inputmode="numeric">
+        <div class="pass-wrap"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" class="eye" onclick="mostrarSenha('loginSenha', this)">Ver</button></div>
+        <button class="btn-dark" onclick="login()">Entrar</button>
+      </div>
+      <!-- REGISTO - SO PARA QUEM AINDA NAO TEM CONTA -->
+      <div id="formRegistar" class="hidden">
+        <h2>Criar Conta Nova</h2>
+        <p style="text-align:left;font-size:12px;color:#777;margin:-8px 0 10px">Só para quem ainda não tem conta.</p>
         <input id="rNome" placeholder="Nome completo">
         <input id="rTel" placeholder="Telefone - ex: 841234567" inputmode="numeric">
         <input id="rIdade" type="number" placeholder="Idade - ex: 18">
@@ -92,7 +103,9 @@
         <select id="rTipo"><option>Cliente</option><option>Funcionário</option></select>
         <div class="pass-wrap"><input id="rSenha" type="password" placeholder="Cria senha"><button type="button" class="eye" onclick="mostrarSenha('rSenha', this)">Ver</button></div>
         <button class="btn-p" onclick="registar()">Criar Conta</button>
-      </details>
+        <br><button type="button" class="link-btn" onclick="mostrarLogin()">Já tenho conta? Entrar →</button>
+      </div>
+      <p id="authMsg"></p>
     </div>
   </div>
 </div>
@@ -122,6 +135,8 @@
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
 document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
 function mostrarSenha(id, btn){ var el=document.getElementById(id); if(el.type==='password'){el.type='text';btn.innerText='Esconder';} else {el.type='password';btn.innerText='Ver';} }
+function mostrarLogin(){ document.getElementById('formLogin').classList.remove('hidden'); document.getElementById('formRegistar').classList.add('hidden'); document.getElementById('tabLogin').classList.add('active'); document.getElementById('tabRegisto').classList.remove('active'); var t=document.getElementById('loginTel'); var r=document.getElementById('rTel'); if(r && r.value && t) t.value=r.value; }
+function mostrarRegisto(){ document.getElementById('formLogin').classList.add('hidden'); document.getElementById('formRegistar').classList.remove('hidden'); document.getElementById('tabLogin').classList.remove('active'); document.getElementById('tabRegisto').classList.add('active'); }
 </script>
 </body>
 </html>
