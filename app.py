@@ -17,7 +17,10 @@ import openpyxl
 
 SECRET = os.getenv("SECRET_KEY", "PADARIA_JEQUESSENE_2026")
 DBURL = os.getenv("DATABASE_URL", "sqlite:///./padaria.db")
-engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {})
+# FIX RENDER: postgres:// -> postgresql://
+if DBURL.startswith("postgres://"):
+    DBURL = DBURL.replace("postgres://", "postgresql://", 1)
+engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {"pool_pre_ping": True})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 pwd = PasswordHash.recommended()
 def agora(): return datetime.now(timezone.utc)
@@ -219,21 +222,30 @@ class EncIn(BaseModel):
 def register(x: Register, d: Session = Depends(dbdep)):
     tel = clean_tel(x.telefone)
     if len(tel) < 9: raise HTTPException(400, "Telefone inválido.")
-    if d.query(User).filter_by(telefone=tel).first(): raise HTTPException(409, "Telefone já registado.")
+    # SE JA TEM CONTA -> NAO CRIA DE NOVO, FAZ LOGIN DIRETO
+    existente = d.query(User).filter_by(telefone=tel).first()
+    if existente:
+        try: ok = pwd.verify(x.password, existente.password_hash)
+        except Exception: ok = False
+        if ok:
+            return {"token": make_token(existente), "user": {"nome": existente.nome, "tipo": existente.tipo}, "ja_tinha_conta": True}
+        raise HTTPException(409, "Este número já tem conta! Vai para ENTRAR e só cola número + senha.")
     if not x.password or len(x.password) < 4: raise HTTPException(400, "Senha curta, usa 4+ caracteres.")
     u = User(nome=x.nome.strip(), telefone=tel, idade=x.idade, email=x.email, foto=x.foto, pais=x.pais, bairro=x.bairro, tipo=normalizar_tipo(x.tipo), password_hash=pwd.hash(x.password))
     d.add(u); d.commit(); log_action(d, u.nome, u.tipo, "registo", f"{u.nome} - {tel}")
     return {"token": make_token(u), "user": {"nome": u.nome, "tipo": u.tipo}}
+
 @app.post("/api/login")
 def login(x: Login, d: Session = Depends(dbdep)):
     tel = clean_tel(x.telefone); u = d.query(User).filter_by(telefone=tel).first()
-    if not u: raise HTTPException(401, "Telefone ou senha errada.")
+    if not u: raise HTTPException(401, "Este número ainda não tem conta. Clica em Criar Conta.")
     try: ok = pwd.verify(x.password, u.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Telefone ou senha errada.")
     if not u.is_active: raise HTTPException(403, "Conta bloqueada.")
     log_action(d, u.nome, u.tipo, "login", "Entrou")
     return {"token": make_token(u), "user": {"nome": u.nome, "tipo": u.tipo, "is_admin": u.is_admin}}
+
 @app.get("/api/me")
 def me(u: User = Depends(current_user)):
     return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin}
