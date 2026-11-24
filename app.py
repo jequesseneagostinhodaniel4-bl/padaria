@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 from urllib.parse import quote
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer
@@ -178,13 +178,29 @@ def init_data():
     finally: d.close()
 init_data()
 
-oauth = OAuth2PasswordBearer(tokenUrl="/api/login")
-def current_user(tok: str = Depends(oauth), d: Session = Depends(dbdep)):
-    try: uid = int(jwt.decode(tok, SECRET, algorithms=["HS256"])["sub"])
+# ===== CORREÇÃO PRINCIPAL: ACEITA TOKEN POR HEADER OU ?token= =====
+oauth = OAuth2PasswordBearer(tokenUrl="/api/login", auto_error=False)
+def current_user(request: Request, tok: str = Depends(oauth), d: Session = Depends(dbdep)):
+    token = None
+    # 1. Header Authorization
+    if tok:
+        token = tok
+    # 2. Query ?token=
+    if not token:
+        token = request.query_params.get("token")
+    # 3. Header manual
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth.replace("Bearer ", "")
+    if not token:
+        raise HTTPException(401, "Sessão inválida. Faz login de novo.")
+    try: uid = int(jwt.decode(token, SECRET, algorithms=["HS256"])["sub"])
     except Exception: raise HTTPException(401, "Sessão inválida.")
     u = d.get(User, uid)
     if not u or not u.is_active: raise HTTPException(401, "Conta indisponível.")
     return u
+
 def admin_only(u: User = Depends(current_user)):
     if not u.is_admin: raise HTTPException(403, "Só Admin Jequessene.")
     return u
@@ -338,6 +354,7 @@ def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depe
     if not t.is_active: raise HTTPException(403, "Essa conta está demitida / bloqueada.")
     log_action(d, a.nome, "Admin", "troca_conta", f"Admin entrou na conta de {t.nome}")
     return {"token": make_token(t), "user": {"nome": t.nome, "tipo": t.tipo}}
+
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "alerta": p.stock <= p.stock_minimo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
@@ -431,8 +448,10 @@ def dashboard(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     por_pag = {}
     for v in vendas: por_pag[v.pagamento] = por_pag.get(v.pagamento, 0) + v.total
     return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": sum(x.total for x in vendas if x.created_at.month == hoje.month), "lucro": sum(x.lucro for x in vendas if x.created_at.month == hoje.month) - sum(x.total for x in compras if x.created_at.month == hoje.month) - sum(x.valor for x in despesas if x.created_at.month == hoje.month)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
+
+# ===== RECIBOS - AGORA COM AUTH POR ?token= TAMBÉM =====
 @app.get("/api/recibo/venda/{vid}")
-def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep)):
+def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep), u: User = Depends(current_user)):
     v = d.get(Venda, vid)
     if not v: raise HTTPException(404, "Não existe")
     pdf = FPDF(); pdf.add_page(); pdf.set_font("Helvetica", "B", 18); pdf.cell(0, 12, "PADARIA JEQUESSENE", new_x="LMARGIN", new_y="NEXT", align="C")
@@ -442,8 +461,9 @@ def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep)):
     pdf.set_font("Helvetica", "B", 14); pdf.cell(0, 12, f"TOTAL: {v.total} MT | Lucro: {v.lucro} MT", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 11); pdf.cell(0, 8, "Obrigado! Volte sempre - Matola, Mocambique", new_x="LMARGIN", new_y="NEXT", align="C")
     out = bytes(pdf.output()); return Response(content=out, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=recibo_venda_{vid}.pdf"})
+
 @app.get("/api/recibo/compra/{cid}")
-def recibo_compra_pdf(cid: int, d: Session = Depends(dbdep)):
+def recibo_compra_pdf(cid: int, d: Session = Depends(dbdep), u: User = Depends(current_user)):
     c = d.get(Compra, cid)
     if not c: raise HTTPException(404, "Não existe")
     pdf = FPDF(); pdf.add_page(); pdf.set_font("Helvetica", "B", 18); pdf.cell(0, 12, "PADARIA JEQUESSENE", new_x="LMARGIN", new_y="NEXT", align="C")
@@ -452,17 +472,27 @@ def recibo_compra_pdf(cid: int, d: Session = Depends(dbdep)):
     pdf.cell(0, 8, f"Produto: {c.produto} x{c.qtd} | Pagamento: {c.pagamento}", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "B", 14); pdf.cell(0, 12, f"TOTAL: {c.total} MT", new_x="LMARGIN", new_y="NEXT")
     out = bytes(pdf.output()); return Response(content=out, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=recibo_compra_{cid}.pdf"})
+
 @app.get("/api/recibo/diario", response_class=HTMLResponse)
 def recibo_diario(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     hoje = date.today(); vs = [x for x in d.query(Venda).all() if x.created_at.date() == hoje]; cs = [x for x in d.query(Compra).all() if x.created_at.date() == hoje]; ds = [x for x in d.query(Despesa).all() if x.created_at.date() == hoje]
     tv = sum(x.total for x in vs); tc = sum(x.total for x in cs); td = sum(x.valor for x in ds)
     return f"<html><body style='font-family:Arial;padding:20px;max-width:480px;margin:auto'><h1>PADARIA JEQUESSENE</h1><p>Fecho {hoje.strftime('%d/%m/%Y')}</p><p>Vendas {len(vs)} - {tv} MT</p><p>Compras {tc} MT</p><p>Despesas {td} MT</p><p>M-Pesa {sum(x.total for x in vs if 'M-Pesa' in x.pagamento)} MT | e-Mola {sum(x.total for x in vs if 'e-Mola' in x.pagamento)} MT | Dinheiro {sum(x.total for x in vs if 'Dinheiro' in x.pagamento)} MT</p><h2>LUCRO LIQUIDO: {tv-tc-td} MT</h2><a href='javascript:window.print()'>Imprimir / Guardar PDF</a></body></html>"
+
+# NOVO: Fecho em JSON para o frontend abrir em modal sem aba nova
+@app.get("/api/recibo/diario/json")
+def recibo_diario_json(d: Session = Depends(dbdep), u: User = Depends(current_user)):
+    hoje = date.today(); vs = [x for x in d.query(Venda).all() if x.created_at.date() == hoje]; cs = [x for x in d.query(Compra).all() if x.created_at.date() == hoje]; ds = [x for x in d.query(Despesa).all() if x.created_at.date() == hoje]
+    tv = sum(x.total for x in vs); tc = sum(x.total for x in cs); td = sum(x.valor for x in ds)
+    return {"ok": True, "data": hoje.strftime("%d/%m/%Y"), "vendas_qtd": len(vs), "vendas_total": tv, "compras_total": tc, "despesas_total": td, "lucro_liquido": tv-tc-td, "mpesa": sum(x.total for x in vs if 'M-Pesa' in x.pagamento), "emola": sum(x.total for x in vs if 'e-Mola' in x.pagamento), "dinheiro": sum(x.total for x in vs if 'Dinheiro' in x.pagamento), "vendas": [{"produto": x.produto, "qtd": x.qtd, "total": x.total, "pagamento": x.pagamento} for x in vs], "compras": [{"produto": x.produto, "fornecedor": x.fornecedor, "qtd": x.qtd, "total": x.total} for x in cs]}
+
 @app.get("/api/export/csv")
 def export_csv(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     linhas = ["tipo,data,cliente_vendedor,produto,quantidade,total,lucro,pagamento"]
     for v in d.query(Venda).all(): linhas.append(f"VENDA,{v.created_at},{v.cliente}/{v.vendedor},{v.produto},{v.qtd},{v.total},{v.lucro},{v.pagamento}")
     for c in d.query(Compra).all(): linhas.append(f"COMPRA,{c.created_at},{c.fornecedor}/{c.comprado_por},{c.produto},{c.qtd},{c.total},0,{c.pagamento}")
     return Response(content="\n".join(linhas), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=padaria_jequessene.csv"})
+
 @app.get("/api/export/excel")
 def export_excel(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     wb = openpyxl.Workbook(); ws = wb.active; ws.title = "Vendas"; ws.append(["Data","Cliente","Vendedor","Produto","Qtd","Total MT","Lucro MT","Pagamento","Estado"])
@@ -473,8 +503,12 @@ def export_excel(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     for c in d.query(Compra).all(): ws3.append([c.created_at.strftime("%d/%m/%Y %H:%M"), c.fornecedor, c.produto, c.qtd, c.total, c.pagamento])
     ws4 = wb.create_sheet("Despesas"); ws4.append(["Data","Descricao","Valor MT","Categoria","Criado por"])
     for x in d.query(Despesa).all(): ws4.append([x.created_at.strftime("%d/%m/%Y %H:%M"), x.descricao, x.valor, x.categoria, x.criado_por])
+    ws5 = wb.create_sheet("Fecho Hoje")
+    hoje = date.today(); vs = [x for x in d.query(Venda).all() if x.created_at.date() == hoje]; cs = [x for x in d.query(Compra).all() if x.created_at.date() == hoje]; ds = [x for x in d.query(Despesa).all() if x.created_at.date() == hoje]
+    ws5.append(["PADARIA JEQUESSENE - FECHO", hoje.strftime("%d/%m/%Y")]); ws5.append(["Vendas Hoje", sum(x.total for x in vs)]); ws5.append(["Compras Hoje", sum(x.total for x in cs)]); ws5.append(["Despesas Hoje", sum(x.valor for x in ds)]); ws5.append(["Lucro Liquido", sum(x.total for x in vs)-sum(x.total for x in cs)-sum(x.valor for x in ds)])
     buf = io.BytesIO(); wb.save(buf); buf.seek(0)
     return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=padaria_jequessene.xlsx"})
+
 @app.get("/api/admin/painel")
 def painel_admin(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).order_by(Venda.created_at.desc()).limit(100).all(); compras = d.query(Compra).order_by(Compra.created_at.desc()).limit(100).all(); logs = d.query(Log).order_by(Log.created_at.desc()).limit(300).all()
