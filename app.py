@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt
 from pwdlib import PasswordHash
 from pydantic import BaseModel
-from sqlalchemy import create_engine, String, Integer, DateTime, Text, Boolean, Float
+from sqlalchemy import create_engine, String, Integer, DateTime, Text, Boolean, Float, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, Session
 from fpdf import FPDF
 import openpyxl
@@ -124,6 +124,20 @@ class Log(Base):
     detalhe: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 Base.metadata.create_all(engine)
+# ===== CORREÇÃO TEMA - CRIA COLUNA SE NÃO EXISTIR NA BD VELHA =====
+try:
+    with engine.connect() as conn:
+        if DBURL.startswith("sqlite"):
+            cols = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+            if "tema" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN tema VARCHAR(20) DEFAULT 'branco'"))
+                conn.commit()
+        else:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tema VARCHAR(20) DEFAULT 'branco'"))
+            conn.commit()
+    print("Migracao tema OK")
+except Exception as e:
+    print("Migracao tema ignorada:", e)
 def dbdep():
     d = SessionLocal()
     try: yield d
@@ -242,7 +256,11 @@ def me(u: User = Depends(current_user)):
     return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin, "tema": getattr(u, "tema", "branco") or "branco"}
 @app.post("/api/tema")
 def salvar_tema(tema: str = Query("branco"), u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    u.tema = "preto" if tema == "preto" else "branco"; d.commit(); return {"ok": True, "tema": u.tema}
+    try:
+        u.tema = "preto" if tema == "preto" else "branco"; d.commit()
+    except Exception:
+        d.rollback()
+    return {"ok": True, "tema": tema}
 @app.get("/api/tema")
 def ler_tema(u: User = Depends(current_user)):
     return {"tema": getattr(u, "tema", "branco") or "branco"}
