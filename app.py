@@ -124,7 +124,6 @@ class Log(Base):
     detalhe: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 Base.metadata.create_all(engine)
-# ===== CORREÇÃO TEMA - CRIA COLUNA SE NÃO EXISTIR NA BD VELHA =====
 try:
     with engine.connect() as conn:
         if DBURL.startswith("sqlite"):
@@ -414,7 +413,11 @@ def dashboard(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     mais = sorted(cont.items(), key=lambda x: x[1], reverse=True)[:5]
     por_pag = {}
     for v in vendas: por_pag[v.pagamento] = por_pag.get(v.pagamento, 0) + v.total
-    return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": sum(x.total for x in vendas if x.created_at.month == hoje.month), "lucro": sum(x.lucro for x in vendas if x.created_at.month == hoje.month) - sum(x.total for x in compras if x.created_at.month == hoje.month) - sum(x.valor for x in despesas if x.created_at.month == hoje.month)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
+    mes_vendas = sum(x.total for x in vendas if x.created_at.month == hoje.month)
+    mes_lucro = sum(x.lucro for x in vendas if x.created_at.month == hoje.month) - sum(x.total for x in compras if x.created_at.month == hoje.month) - sum(x.valor for x in despesas if x.created_at.month == hoje.month)
+    META_MES = 50000
+    meta_pct = min(100, round((mes_vendas / META_MES * 100))) if META_MES else 0
+    return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": mes_vendas, "lucro": mes_lucro}, "meta": {"objetivo": META_MES, "atingido": mes_vendas, "pct": meta_pct, "falta": max(0, META_MES - mes_vendas)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
 @app.get("/api/recibo/venda/{vid}")
 def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep), u: User = Depends(current_user)):
     v = d.get(Venda, vid)
