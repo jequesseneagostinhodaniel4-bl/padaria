@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - COMPLETO FINAL v8 - TUDO JUNTO
+// PADARIA JEQUESSENE - COMPLETO FINAL v12
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
@@ -18,8 +18,8 @@ function lerFoto(e){ const f=e.target.files[0]; if(!f) return; const rd=new File
 function lerFotoPerfil(e){ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ FOTO_PERFIL=rd.result; document.getElementById('perfilFotoPrev').src=FOTO_PERFIL; }; rd.readAsDataURL(f); }
 async function login(){ try{ const d=await api('/api/login','POST',{telefone:val('loginTel'),password:val('loginSenha')}); token=d.token; localStorage.setItem('token',token); await mostrarBoasVindas(); }catch(e){ document.getElementById('authMsg').innerText=e.message; } }
 async function registar(){ try{ const d=await api('/api/register','POST',{nome:val('rNome'),telefone:val('rTel'),idade:parseInt(val('rIdade')||18),email:val('rEmail'),foto:'',pais:'Moçambique',bairro:val('rBairro'),tipo:val('rTipo'),password:val('rSenha')}); token=d.token; localStorage.setItem('token',token); await mostrarBoasVindas(); }catch(e){ document.getElementById('authMsg2').innerText=e.message; } }
-async function mostrarBoasVindas(){ try{ ME=await api('/api/me'); }catch(e){ location.reload(); return; } document.getElementById('loginPage').classList.add('hidden'); const w=document.getElementById('welcome'); w.classList.remove('hidden'); document.getElementById('welcomeNome').innerText='Bem-vindo, '+ME.nome+'!'; const hora=new Date().getHours(); document.getElementById('welcomeTexto').innerText = hora<12 ? 'Bom dia! Pão fresco à tua espera.' : hora<18 ? 'Boa tarde! Vamos vender bem hoje.' : 'Boa noite! Vamos fechar o dia bem.'; document.getElementById('welcomeFoto').src=ME.foto||'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200'; }
-function entrarSistema(){ document.getElementById('welcome').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); carregarDados(); }
+async function mostrarBoasVindas(){ try{ ME=await api('/api/me'); }catch(e){ location.reload(); return; } document.getElementById('loginPage').classList.add('hidden'); document.getElementById('loginPage').style.display='none'; const w=document.getElementById('welcome'); w.classList.remove('hidden'); w.style.display='flex'; w.style.visibility='visible'; document.getElementById('welcomeNome').innerText='Bem-vindo, '+ME.nome+'!'; const hora=new Date().getHours(); document.getElementById('welcomeTexto').innerText = hora<12 ? 'Bom dia! Pão fresco à tua espera.' : hora<18 ? 'Boa tarde! Vamos vender bem hoje.' : 'Boa noite! Vamos fechar o dia bem.'; document.getElementById('welcomeFoto').src=ME.foto||'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200'; }
+function entrarSistema(){ var w=document.getElementById('welcome'); w.classList.add('hidden'); w.style.display='none'; w.style.visibility='hidden'; document.getElementById('app').classList.remove('hidden'); document.getElementById('app').style.display='block'; carregarDados(); }
 async function demitirPessoa(id,nome){ if(!confirm('Demitir '+nome+'?')) return; try{ const d=await api('/api/pessoas/'+id+'/demitir','POST',{}); toast(d.msg); carregarDados(); }catch(e){ alert(e.message); } }
 async function reativarPessoa(id,nome){ if(!confirm('Reativar '+nome+'?')) return; try{ const d=await api('/api/pessoas/'+id+'/reativar','POST',{}); toast(d.msg); carregarDados(); }catch(e){ alert(e.message); } }
 async function pagarDivida(id,cliente){ if(!confirm(cliente+' pagou?')) return; try{ await api('/api/vendas/'+id+'/pagar','POST',{}); toast('Dívida paga'); carregarDados(); }catch(e){ alert(e.message); } }
@@ -30,11 +30,12 @@ async function mudarSenha(){ try{ await api('/api/me/senha','POST',{antiga:val('
 function desenharGraficoProf(dados){
   const box = document.getElementById('graficoProf'); const labels = document.getElementById('graficoLabels'); const txt = document.getElementById('resumoSemanaTxt'); const semanaEl = document.getElementById('semanaTxt');
   if(!box || !dados || !dados.length) return;
+  const preto = document.body.classList.contains('tema-preto');
   const maxV = Math.max(...dados.map(g=>g.vendas||0), 100); const total = dados.reduce((s,g)=>s+(g.vendas||0),0); const hojeV = dados[dados.length-1]?.vendas || 0; const melhor = Math.max(...dados.map(g=>g.vendas||0));
-  if(txt){ txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`; txt.style.color = document.body.classList.contains('tema-preto') ? '#9CA3AF' : '#888'; }
+  if(txt){ txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`; txt.style.color = preto ? '#fff' : '#111'; txt.style.fontWeight='700'; }
   if(semanaEl) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
-  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155)); const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#3B82F6'; const corTxt = document.body.classList.contains('tema-preto') ? '#fff' : '#111'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="font-size:11px;font-weight:700;margin-bottom:8px;white-space:nowrap;color:${corTxt}">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div></div>`; }).join('');
-  if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center;color:${document.body.classList.contains('tema-preto')?'#9CA3AF':'#555'}">${g.label}</span>`).join('');
+  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 18 : Math.max(30, Math.round((v / maxV) * 150)); let cor = '#E8B84B'; if(v === 0) cor = preto ? '#3A3A3A' : '#D9D9D9'; if(isHoje && v > 0) cor = '#2E9E5B'; const corTxt = preto ? '#fff' : '#111'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="color:${corTxt}">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px;border:1px solid ${preto?'#555':'#ccc'}"></div></div>`; }).join('');
+  if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center;color:${preto?'#fff':'#111'}">${g.label}</span>`).join('');
   const mini = document.getElementById('miniBarras'); if(mini) mini.innerHTML = dados.map(g=>`<div style="width:10px;height:${Math.max(12, Math.round(((g.vendas||0)/maxV)*70))}px;background:${g.vendas? '#E8B84B':'#DDD'};border-radius:4px"></div>`).join('');
   const mesV = window._mesVendas || total; const meta = window._metaObjetivo || 50000; const pct = Math.min(100, Math.round((mesV/meta)*100));
   const elMeta = document.getElementById('metaValor'); if(elMeta) elMeta.innerText = mesV + ' MT';
@@ -49,7 +50,9 @@ function avatarCliente(foto, nome){ if(foto) return `<img src="${foto}" style="w
 async function carregarDados(){
   if(!token) return; aplicarTema();
   try{ ME=await api('/api/me'); }catch(e){ localStorage.removeItem('token'); token=''; location.reload(); return; }
-  document.getElementById('loginPage').classList.add('hidden'); document.getElementById('app').classList.remove('hidden');
+  document.getElementById('loginPage').classList.add('hidden'); document.getElementById('loginPage').style.display='none';
+  var w=document.getElementById('welcome'); if(w){ w.classList.add('hidden'); w.style.display='none'; w.style.visibility='hidden'; }
+  document.getElementById('app').classList.remove('hidden'); document.getElementById('app').style.display='block';
   document.getElementById('saudacao').innerText='Olá, '+ME.nome; document.getElementById('infoUser').innerText=ME.tipo+' • '+ME.telefone;
   const foto=ME.foto||''; if(foto){ document.getElementById('meuAvatar').src=foto; document.getElementById('sideFoto').src=foto; }
   const isAdmin=ME.is_admin; const isFunc=ME.tipo==='Funcionário'; const isCliente=ME.tipo==='Cliente';
