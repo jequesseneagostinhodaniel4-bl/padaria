@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
 <script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
-<link rel="stylesheet" href="/static/style.css?v=8">
+<link rel="stylesheet" href="/static/style.css?v=12">
 <style>
 .dash-card{background:#fff!important;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);color:#111!important}
 .dash-card h1, .dash-card b{color:#111!important}
@@ -36,6 +36,50 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 #listaEnc .linha{ background:#FFFBF2!important; color:#111!important; }
 #listaEnc .linha b{ color:#111!important; }
 #listaEnc .linha small{ color:#555!important; }
+.sidebar{ background:#1F150C!important; }
+.sidebar button{ display:block!important; width:100%!important; text-align:left!important; background:transparent!important; color:#EDE3D3!important; border:1px solid #3A2C1A!important; padding:11px 12px!important; border-radius:10px!important; cursor:pointer!important; font-size:14px!important; margin-bottom:6px!important; }
+.sidebar button.on, .sidebar button:hover{ background:#E8B84B!important; color:#111!important; font-weight:700!important; }
+.sidebar button.sair{ color:#FF8A7A!important; }
+.sidebar h4{ color:#E8B84B!important; font-size:12px!important; }
+.sidebar .perfil{ background:#2A1D10!important; color:#fff!important; }
+.sidebar .perfil b, .sidebar .perfil small{ color:#fff!important; }
+.sidebar .perfil small{ color:#CFC3AE!important; }
+.main{ background:#F7F2E9!important; color:#111!important; }
+body.tema-preto .main{ background:#0F1115!important; color:#fff!important; }
+body.tema-preto .sidebar{ background:#1F150C!important; }
+body.tema-preto .sidebar button{ color:#EDE3D3!important; border-color:#3A2C1A!important; }
+#welcome{ position:fixed!important; inset:0!important; z-index:9999!important; background:#F7F2E9!important; display:flex!important; align-items:center!important; justify-content:center!important; text-align:center!important; padding:20px!important; }
+#welcome.hidden{ display:none!important; visibility:hidden!important; opacity:0!important; pointer-events:none!important; }
+#welcome img{ width:110px!important; height:110px!important; border-radius:50%!important; object-fit:cover!important; border:4px solid #E8B84B!important; display:block!important; margin:0 auto!important; }
+#welcome h1{ font-size:28px!important; color:#111!important; }
+#welcome p{ color:#555!important; }
+#welcome button{ background:#111!important; color:#fff!important; border:none!important; padding:14px 22px!important; border-radius:999px!important; font-weight:700!important; cursor:pointer!important; }
+#app.hidden{ display:none!important; }
+.layout{ display:flex!important; }
+body.tema-preto #quemComprouGrid > div{ background:#FFFBF2!important; color:#111!important; }
+body.tema-preto #quemComprouGrid b{ color:#111!important; }
+body.tema-preto #quemComprouGrid small{ color:#555!important; }
+body.tema-preto #quemComprouGrid p{ color:#111!important; }
+body.tema-preto #maisVendidosGrid .prod-card{ background:#FFFBF2!important; color:#111!important; }
+body.tema-preto #maisVendidosGrid b{ color:#111!important; }
+body.tema-preto #maisVendidosGrid p{ color:#555!important; }
+body.tema-preto #porPag p{ color:#111!important; }
+body.tema-preto #maisVendidos p{ color:#111!important; }
+body.tema-preto .mini-box{ background:#FFFBF2!important; color:#111!important; border-color:#F5EEDD!important; }
+body.tema-preto .mini-box small{ color:#888!important; }
+body.tema-preto .mini-box div{ color:#111!important; }
+body.tema-preto .mini-box p{ color:#111!important; }
+body.tema-preto #listaEncVendasDash .linha{ background:#FFFBF2!important; color:#111!important; }
+body.tema-preto #listaEncVendasDash b{ color:#111!important; }
+body.tema-preto #listaEncVendasDash span{ color:#111!important; }
+#graficoProf{ background:transparent!important; }
+#graficoProf span{ font-size:12px!important; font-weight:800!important; }
+body:not(.tema-preto) #graficoProf span{ color:#111!important; }
+body.tema-preto #graficoProf span{ color:#fff!important; }
+body:not(.tema-preto) #graficoLabels span{ color:#111!important; }
+body.tema-preto #graficoLabels span{ color:#fff!important; }
+body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
+#miniBarras div{ min-height:12px!important; }
 </style>
 </head>
 <body>
@@ -81,7 +125,7 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
         </div>
         <div class="dash-grid-bottom" style="display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:14px">
           <div class="dash-card"><div class="dash-card-top"><span>🎯 Meta do Mês</span><span>⋯</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap"><div style="background:#111;color:#fff;border-radius:18px;padding:16px;width:170px;text-align:center"><small style="color:#aaa;font-size:11px">META MÊS</small><div style="font-size:22px;font-weight:800;margin:8px 0;color:#fff!important" id="metaValor">0 MT</div><div style="width:90px;height:90px;border-radius:50%;border:8px solid #333;border-top-color:#3B82F6;margin:10px auto;display:flex;align-items:center;justify-content:center"><span id="metaPct" style="font-size:14px;color:#fff!important">0%</span></div><span style="background:#2E9E5B;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px">● A subir</span></div><div style="flex:1;font-size:13px;min-width:140px"><p style="display:flex;justify-content:space-between"><span>Vendas mês</span><b id="metaVendas">0 MT</b></p><div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar1" style="height:100%;background:#111;width:0%"></div></div><p style="display:flex;justify-content:space-between;margin-top:12px"><span>Clientes</span><b id="tClientes">0</b></p><div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar2" style="height:100%;background:#2E9E5B;width:60%"></div></div><p id="dashHoje" style="margin-top:12px;color:#888;font-size:12px"></p></div></div><div style="margin-top:14px"><b style="font-size:14px">Mais vendidos</b><div id="maisVendidosGrid" class="prod-grid" style="margin-top:10px"></div></div></div>
-          <div class="dash-card"><div class="dash-card-top"><span>📈 Vendas da Semana</span><span id="semanaTxt">Semana</span></div><p id="resumoSemanaTxt" style="font-size:12px;color:#888;margin:8px 0">A carregar...</p><div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div><div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:#666;flex-wrap:wrap"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div><div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><div class="mini-box"><small>Por pagamento</small><div id="porPag" style="font-size:13px;margin-top:6px"></div></div><div class="mini-box"><small>Lista</small><div id="maisVendidos" style="font-size:13px;margin-top:6px"></div></div></div></div>
+          <div class="dash-card"><div class="dash-card-top"><span>📈 Vendas da Semana</span><span id="semanaTxt">Semana</span></div><p id="resumoSemanaTxt" style="font-size:12px;color:#888;margin:8px 0">A carregar...</p><div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div><div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px;font-weight:700"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:#666;flex-wrap:wrap"><span>🟡 Dia normal</span><span>🟢 Hoje</span><span>⬜ Sem venda</span></div><div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><div class="mini-box" style="background:#FFFBF2!important"><small>Por pagamento</small><div id="porPag" style="font-size:13px;margin-top:6px;color:#111!important"></div></div><div class="mini-box" style="background:#FFFBF2!important"><small>Lista</small><div id="maisVendidos" style="font-size:13px;margin-top:6px;color:#111!important"></div></div></div></div>
         </div>
         <div class="dash-card" style="margin-top:14px"><div class="dash-card-top"><span>👥 Quem comprou - Foto do cliente + Produto</span><span>Últimas compras</span></div><div id="quemComprouGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px"></div></div>
         <div class="dash-card" style="margin-top:14px"><div class="dash-card-top"><span>⭐ Vendas de Encomendas Entregues</span><span>Encomenda virou Venda</span></div><div id="listaEncVendasDash" style="margin-top:12px"></div></div>
@@ -101,7 +145,7 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto - aparece no Dashboard quando comprares</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js?v=8"></script>
+<script src="/static/app.js?v=12"></script>
 <script>
 if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100); }
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
@@ -110,6 +154,7 @@ function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='p
 function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
 function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
 function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+function entrarSistema(){ var w=document.getElementById('welcome'); w.classList.add('hidden'); w.style.display='none'; w.style.visibility='hidden'; document.getElementById('app').classList.remove('hidden'); document.getElementById('app').style.display='block'; carregarDados(); }
 </script>
 </body>
 </html>
