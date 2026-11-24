@@ -523,7 +523,6 @@ def painel_admin(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
 @app.get("/api/backup")
 def backup(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
-@app.get("/api```python
 @app.get("/api/historico")
 def get_historico(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     rows = d.query(Historico).order_by(Historico.id.desc()).all()
