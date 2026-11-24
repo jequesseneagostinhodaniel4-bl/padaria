@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
-<link rel="stylesheet" href="/static/style.css">
+<script>
+  // Aplica tema ANTES da página aparecer - sem piscar branco
+  try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}
+</script>
+<link rel="stylesheet" href="/static/style.css?v=3">
 <style>
 .kpi-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-top:4px solid #E8B84B;border-radius:18px;padding:16px 14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
 .kpi-novo .kpi-top{display:flex;justify-content:space-between;align-items:center;color:#8A6A3A;font-size:13px;margin-bottom:10px}
@@ -14,7 +18,7 @@
 .dash-head{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
 @media(max-width:600px){.kpi-novo b{font-size:24px}}
 .btn-tema{background:#111;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
-body.tema-preto{background:#0F1115 !important;color:#fff !important}
+body.tema-preto, html.tema-preto body{background:#0F1115 !important;color:#fff !important}
 body.tema-preto .topbar, body.tema-preto .sidebar, body.tema-preto .main, body.tema-preto .card, body.tema-preto .login-right{background:#0F1115 !important;color:#fff !important;border-color:#222 !important}
 body.tema-preto .kpi-novo, body.tema-preto .card-novo{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important;box-shadow:none !important}
 body.tema-preto .kpi-novo b, body.tema-preto .card-novo h2, body.tema-preto .dash-head h1{color:#fff !important}
@@ -24,6 +28,10 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 </style>
 </head>
 <body>
+<script>
+  // Aplica logo no body também
+  try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); } }catch(e){}
+</script>
 <div id="loginPage" class="login-page">
   <div class="login-left">
     <img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400">
@@ -31,6 +39,7 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
     <div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola. Gestão simples para vender mais e perder menos.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div>
   </div>
   <div class="login-right"><div class="login-box">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button id="btn-tema-login" class="btn-tema" onclick="if(window.mudarTema){mudarTema()}else{document.body.classList.toggle('tema-preto');localStorage.setItem('tema_jeq',document.body.classList.contains('tema-preto')?'preto':'branco');this.innerText=document.body.classList.contains('tema-preto')?'☀️ Branco':'🌙 Preto'}">🌙 Preto</button></div>
     <div class="login-logo">J</div><h2>PADARIA</h2><p class="sub">Gestão Comercial • Matola, Moçambique</p><p class="date" id="dataHoje"></p>
     <div class="tabs2"><button id="tabLogin" class="on" onclick="mostrarLogin()">Entrar</button><button id="tabRegisto" onclick="mostrarRegisto()">Criar conta</button></div>
     <div id="formLogin"><input id="loginTel" placeholder="Teu telefone • ex: 840000000" inputmode="numeric"><div class="pass"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" onclick="mostrarSenha('loginSenha',this)">Ver</button></div><button class="btn-main" onclick="login()">Entrar</button><p class="msg" id="authMsg"></p></div>
@@ -93,57 +102,19 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=3"></script>
 <script>
-function mudarTemaFallback(){
-  const preto = document.body.classList.toggle('tema-preto');
-  localStorage.setItem('tema_jeq', preto ? 'preto' : 'branco');
-  const b = document.getElementById('btn-tema'); if(b) b.innerText = preto ? '☀️ Branco' : '🌙 Preto';
+// APENAS helpers da página - NÃO duplicar funções do app.js (fechoDia, baixarComToken, etc já estão no app.js)
+if(localStorage.getItem('tema_jeq')==='preto'){
+  document.body.classList.add('tema-preto');
+  setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100);
 }
-if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; },100); }
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
 document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
 function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='password'){el.type='text';btn.innerText='Esconder'}else{el.type='password';btn.innerText='Ver'}}
 function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
 function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
 function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
-function getToken(){ return localStorage.getItem('token') || ''; }
-function authHeaders(){ return { 'Authorization': 'Bearer ' + getToken() }; }
-async function baixarComToken(url, nomeFicheiro){
-  const token = getToken(); if(!token){ alert('Faz login de novo'); return; }
-  const sep = url.includes('?') ? '&' : '?';
-  const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: authHeaders() });
-  if(!res.ok){ alert('Erro ao baixar: ' + res.status); return; }
-  const blob = await res.blob(); const u = window.URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
-}
-async function fechoDia(){
-  const token = getToken(); if(!token){ alert('Faz login de novo'); return; }
-  try{
-    const res = await fetch('/api/recibo/diario/json?token=' + encodeURIComponent(token), { headers: authHeaders() });
-    const r = await res.json();
-    let modal = document.getElementById('modalFecho');
-    if(!modal){ modal = document.createElement('div'); modal.id='modalFecho'; modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(modal); }
-    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px;border-radius:16px;font-family:Arial"><div style="text-align:center"><h2>🍞 PADARIA JEQUESSENE</h2><p>Fecho do Dia - ${r.data}</p><hr></div><p>Vendas Hoje: <b>${r.vendas_qtd} - ${r.vendas_total} MT</b></p><p>Compras Hoje: <b>${r.compras_total} MT</b></p><p>Despesas Hoje: <b>${r.despesas_total} MT</b></p><p>M-Pesa: ${r.mpesa} MT | e-Mola: ${r.emola} MT | Dinheiro: ${r.dinheiro} MT</p><h2>LUCRO LÍQUIDO: ${r.lucro_liquido} MT</h2><hr><b>Vendas:</b><br>${r.vendas.map(v=>`${v.produto} x${v.qtd} - ${v.total} MT (${v.pagamento})`).join('<br>') || 'Sem vendas'}<br><br><b>Compras:</b><br>${r.compras.map(c=>`${c.produto} x${c.qtd} - ${c.total} MT (${c.fornecedor})`).join('<br>') || 'Sem compras'}<div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div></div>`;
-    modal.style.display='flex';
-  }catch(e){ alert('Erro fecho: ' + e); }
-}
-function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessene.xlsx'); }
-function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); }
-function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
-function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
-function desenharGraficoProf(dados){
-  const box = document.getElementById('graficoProf'); const labels = document.getElementById('graficoLabels'); const txt = document.getElementById('resumoSemanaTxt');
-  if(!box || !dados) return;
-  const maxV = Math.max(...dados.map(g=>g.vendas||0), 100);
-  const total = dados.reduce((s,g)=>s+(g.vendas||0),0);
-  const hojeV = dados[dados.length-1]?.vendas || 0; const melhor = Math.max(...dados.map(g=>g.vendas||0));
-  if(txt) txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`;
-  const semanaEl = document.getElementById('semanaTxt'); if(semanaEl && dados.length) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
-  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155)); const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div></div>`; }).join('');
-  if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center">${g.label}</span>`).join('');
-  const avatar = document.getElementById('dashAvatar'); if(avatar && window.ME?.foto) avatar.src = window.ME.foto;
-}
 </script>
 </body>
 </html>
