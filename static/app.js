@@ -1,8 +1,7 @@
-// PADARIA JEQUESSENE V2 - COMPLETO + TEMA CORRIGIDO
+// PADARIA JEQUESSENE V2 - COMPLETO + TEMA + DASHBOARD NOVO
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
-// ===== TEMA COMPLETO - CORRIGIDO =====
 async function aplicarTema(){
   let preto = localStorage.getItem('tema_jeq') === 'preto';
   if(token){
@@ -10,20 +9,17 @@ async function aplicarTema(){
   }
   document.body.classList.toggle('tema-preto', preto);
   let b = document.getElementById('btn-tema');
-  if(b){
-    b.innerText = preto ? '☀️ Branco' : '🌙 Preto';
-  } else {
-    // Se o index.html for velho e não tiver botão, cria dentro do topbar se existir, senão flutuante
+  if(b){ b.innerText = preto ? '☀️ Branco' : '🌙 Preto'; }
+  else {
     const topActions = document.querySelector('.top-actions');
     const btn = document.createElement('button');
     btn.id='btn-tema'; btn.className='btn-tema'; btn.onclick=mudarTema;
     btn.innerText=preto?'☀️ Branco':'🌙 Preto';
     if(topActions){ topActions.prepend(btn); }
-    else {
-      btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:#111;color:#fff;border:none;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer';
-      document.body.appendChild(btn);
-    }
+    else { btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:#111;color:#fff;border:none;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer'; document.body.appendChild(btn); }
   }
+  const b2 = document.getElementById('btn-tema-login');
+  if(b2) b2.innerText = preto ? '☀️ Branco' : '🌙 Preto';
 }
 async function mudarTema(){
   const preto = !document.body.classList.contains('tema-preto');
@@ -31,12 +27,13 @@ async function mudarTema(){
   localStorage.setItem('tema_jeq', preto ? 'preto' : 'branco');
   const b = document.getElementById('btn-tema');
   if(b){ b.innerText = preto ? '☀️ Branco' : '🌙 Preto'; }
+  const b2 = document.getElementById('btn-tema-login');
+  if(b2){ b2.innerText = preto ? '☀️ Branco' : '🌙 Preto'; }
   if(token){ try{ await fetch('/api/tema?tema='+(preto?'preto':'branco'), {method:'POST', headers:H()}); }catch(e){} }
   toast(preto ? 'Modo Preto ativado' : 'Modo Branco ativado');
 }
 window.mudarTema = mudarTema;
 window.aplicarTema = aplicarTema;
-// Aplica logo mesmo antes de login
 if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); }
 document.addEventListener('DOMContentLoaded', aplicarTema);
 setTimeout(aplicarTema, 300);
@@ -84,6 +81,7 @@ async function salvarPerfil(){
   try{ const d=await api('/api/me','PUT',{nome:val('perfilNome'),bairro:val('perfilBairro'),email:val('perfilEmail'),foto:FOTO_PERFIL}); toast('Perfil atualizado!'); fecharPerfil(); if(FOTO_PERFIL) ME.foto=FOTO_PERFIL; carregarDados(); }catch(e){ alert(e.message); }
 }
 async function mudarSenha(){ try{ await api('/api/me/senha','POST',{antiga:val('senhaAntiga'),nova:val('senhaNova')}); toast('Senha trocada!'); }catch(e){ alert(e.message); } }
+// ===== DASHBOARD NOVO - IGUAL A FOTO - AZUL + META =====
 function desenharGraficoProf(dados){
   const box = document.getElementById('graficoProf'); const labels = document.getElementById('graficoLabels'); const txt = document.getElementById('resumoSemanaTxt'); const semanaEl = document.getElementById('semanaTxt');
   if(!box || !dados || !dados.length) return;
@@ -92,8 +90,19 @@ function desenharGraficoProf(dados){
   const hojeV = dados[dados.length-1]?.vendas || 0; const melhor = Math.max(...dados.map(g=>g.vendas||0));
   if(txt) txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`;
   if(semanaEl) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
-  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155)); const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div></div>`; }).join('');
+  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155)); const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#3B82F6'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="font-size:11px;font-weight:700;margin-bottom:8px;white-space:nowrap">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div></div>`; }).join('');
   if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center">${g.label}</span>`).join('');
+  const mini = document.getElementById('miniBarras');
+  if(mini) mini.innerHTML = dados.map(g=>`<div style="width:10px;height:${Math.max(12, Math.round(((g.vendas||0)/maxV)*70))}px;background:${g.vendas? '#E8B84B':'#DDD'};border-radius:4px"></div>`).join('');
+  const mesV = window._mesVendas || total;
+  const meta = 50000;
+  const pct = Math.min(100, Math.round((mesV/meta)*100));
+  const elMeta = document.getElementById('metaValor'); if(elMeta) elMeta.innerText = mesV + ' MT';
+  const elPct = document.getElementById('metaPct'); if(elPct) elPct.innerText = pct + '%';
+  const elMv = document.getElementById('metaVendas'); if(elMv) elMv.innerText = mesV + ' MT';
+  const bar1 = document.getElementById('metaBar1'); if(bar1) bar1.style.width = pct + '%';
+  const hj = document.getElementById('dashHojeValor'); if(hj) hj.innerText = hojeV + ' MT';
+  const ms = document.getElementById('dashMesValor'); if(ms) ms.innerText = mesV + ' MT';
   const avatar = document.getElementById('dashAvatar'); if(avatar && ME?.foto) avatar.src = ME.foto;
 }
 async function carregarDados(){
@@ -114,6 +123,7 @@ async function carregarDados(){
   else { mostrarSec('dashSec', document.querySelector('[data-sec="dashSec"]')); }
   try{
     const dash=await api('/api/dashboard');
+    window._mesVendas = dash.mes.vendas;
     const elV = document.getElementById('tVendas'); if(elV) elV.innerHTML = dash.semana.vendas + ' <small>MT</small>';
     const elL = document.getElementById('tLucro'); if(elL) elL.innerHTML = dash.semana.lucro + ' <small>MT</small>';
     const elC = document.getElementById('tClientes'); if(elC) elC.innerText = dash.totais.clientes;
