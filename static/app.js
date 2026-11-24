@@ -36,8 +36,52 @@ function mostrar(id){
   ['dashSec','pessoasSec','produtosSec','vendasSec','stockSec','fornecedorSec','encomendasSec','dividasSec','adminSec'].forEach(x=>{ let el=document.getElementById(x); if(el) el.classList.add('hidden'); });
   let alvo=document.getElementById(id); if(alvo) alvo.classList.remove('hidden'); carregarDados(); if(id==='adminSec') carregarPainelAdmin();
 }
-async function login(){ try{ let d=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:document.getElementById('loginTel').value.trim(),password:document.getElementById('loginSenha').value})}); token=d.token; localStorage.setItem('padaria_token',token); await carregarMe(); }catch(e){ document.getElementById('authMsg').innerText='❌ '+e.message; } }
-async function registar(){ try{ let d=await api('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('rNome').value.trim(),telefone:document.getElementById('rTel').value.trim(),idade:parseInt(document.getElementById('rIdade').value)||18,email:document.getElementById('rEmail').value.trim(),foto:_fotoTemp,pais:document.getElementById('rPais').value,bairro:document.getElementById('rBairro').value.trim(),tipo:document.getElementById('rTipo').value,password:document.getElementById('rSenha').value})}); token=d.token; localStorage.setItem('padaria_token',token); await carregarMe(); }catch(e){ document.getElementById('authMsg').innerText='❌ '+e.message; } }
+// === LOGIN / REGISTO CORRIGIDO ===
+function mostrarLogin(){
+  let l=document.getElementById('formLogin'); let r=document.getElementById('formRegistar');
+  if(l) l.classList.remove('hidden'); if(r) r.classList.add('hidden');
+  let tl=document.getElementById('tabLogin'); let tr=document.getElementById('tabRegisto');
+  if(tl) tl.classList.add('active'); if(tr) tr.classList.remove('active');
+  let rt=document.getElementById('rTel'); let lt=document.getElementById('loginTel');
+  if(rt && rt.value && lt) lt.value=rt.value;
+}
+function mostrarRegisto(){
+  let l=document.getElementById('formLogin'); let r=document.getElementById('formRegistar');
+  if(l) l.classList.add('hidden'); if(r) r.classList.remove('hidden');
+  let tl=document.getElementById('tabLogin'); let tr=document.getElementById('tabRegisto');
+  if(tl) tl.classList.remove('active'); if(tr) tr.classList.add('active');
+}
+async function login(){
+  try{
+    let tel=document.getElementById('loginTel').value.trim();
+    let senha=document.getElementById('loginSenha').value;
+    if(!tel||!senha) return alert('Põe número + senha!');
+    let d=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:tel,password:senha})});
+    token=d.token; localStorage.setItem('padaria_token',token); await carregarMe();
+  }catch(e){ document.getElementById('authMsg').innerText='❌ '+e.message; }
+}
+async function registar(){
+  try{
+    let tel=document.getElementById('rTel').value.trim();
+    let senha=document.getElementById('rSenha').value;
+    // SE JA TEM CONTA, ENTRA DIRETO - NAO CRIA DE NOVO
+    try{
+      let d=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:tel,password:senha})});
+      token=d.token; localStorage.setItem('padaria_token',token);
+      alert('Já tinhas conta! Entraste direto.');
+      await carregarMe(); return;
+    }catch(e){}
+    let d=await api('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('rNome').value.trim(),telefone:tel,idade:parseInt(document.getElementById('rIdade').value)||18,email:document.getElementById('rEmail').value.trim(),foto:_fotoTemp,pais:document.getElementById('rPais').value,bairro:document.getElementById('rBairro').value.trim(),tipo:document.getElementById('rTipo').value,password:senha})});
+    token=d.token; localStorage.setItem('padaria_token',token); await carregarMe();
+  }catch(e){
+    if((e.message||'').toLowerCase().includes('existe')||(e.message||'').toLowerCase().includes('já tem')||(e.message||'').toLowerCase().includes('regist')){
+      document.getElementById('authMsg').innerText='⚠️ Este número já tem conta! Vai para ENTRAR e só cola número + senha.';
+      let lt=document.getElementById('loginTel'); let rt=document.getElementById('rTel');
+      if(lt && rt) lt.value=rt.value;
+      mostrarLogin();
+    } else document.getElementById('authMsg').innerText='❌ '+e.message;
+  }
+}
 function lerFoto(e, onde){ if(!e.target.files[0]) return; let r=new FileReader(); r.onload=ev=>{ _fotoTemp=ev.target.result; if(onde) document.getElementById(onde).src=_fotoTemp; }; r.readAsDataURL(e.target.files[0]); }
 async function carregarMe(){ try{ me=await api('/api/me'); document.getElementById('status').innerText='● Ligado • '+me.tipo; document.getElementById('authSec').classList.add('hidden'); let bg=document.getElementById('loginBg'); if(bg) bg.classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); let barra=document.getElementById('barra'); if(barra) barra.classList.remove('hidden'); document.getElementById('saudacao').innerText='Olá, '+me.nome; document.getElementById('infoUser').innerText=me.tipo+' • '+me.telefone+' • '+me.idade+' anos • '+me.pais+' - '+me.bairro; if(me.foto) document.getElementById('meuAvatar').src=me.foto; document.getElementById('btnVoltarAdmin').style.display=localStorage.getItem('modo_admin')?'block':'none'; document.getElementById('avisoPerm').innerText=me.is_admin?'Admin Jequessene — Acesso total.':(me.tipo==='Funcionário'||me.tipo==='Funcionario')?'Funcionário — Vês o teu trabalho.':'Cliente — Podes ver Produtos.'; aplicarPermissoes(); carregarDados(); }catch(e){ sair(); } }
 function sair(){ token=''; localStorage.removeItem('padaria_token'); localStorage.removeItem('modo_admin'); let barra=document.getElementById('barra'); if(barra) barra.classList.add('hidden'); location.reload(); }
