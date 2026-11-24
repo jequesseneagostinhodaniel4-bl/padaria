@@ -58,10 +58,6 @@
   .auth-tabs button{ flex:1; padding:12px; border-radius:11px; border:1px solid #E5E0D8; background:#f5f1ea; font-weight:700; cursor:pointer; }
   .auth-tabs button.active{ background:#2F2A26; color:#fff; border-color:#2F2A26; }
   .link-btn{ background:none; border:none; color:#8B5E2E; font-weight:700; cursor:pointer; margin-top:10px; }
-  /* SINO ALERTAS */
-  .sino{ font-size:26px; background:#fff; border:2px solid #ff9800; border-radius:50px; padding:6px 12px; cursor:pointer; position:relative; }
-  .sino-badge{ background:red; color:#fff; border-radius:50%; padding:2px 7px; font-size:13px; position:absolute; top:-8px; right:-5px; display:none; }
-  #caixaAlertas{ background:#fff3cd; border:2px solid #ff9800; padding:14px; border-radius:12px; margin:10px 0; display:none; }
   @media(max-width:700px){
     .login-bg{ justify-content:center !important; padding:16px !important; }
     .login-card{ margin-right:0 !important; width:100% !important; }
@@ -112,9 +108,8 @@
   </div>
 </div>
 <div id="app" class="hidden">
-  <header class="topbar"><div class="brand"><img src="/static/logo.png" class="brand-logo-img" onerror="this.style.display='none'"><div><h1>Padaria Jequessene</h1><p>Gestão Comercial | Matola • <span id="dataTop"></span></p></div></div><div style="display:flex;gap:10px;align-items:center"><button id="btnSino" class="sino" onclick="mostrarAlertas()">🔔<span id="numAlertas" class="sino-badge">0</span></button><span id="status" class="status">Online</span></div></header>
+  <header class="topbar"><div class="brand"><img src="/static/logo.png" class="brand-logo-img" onerror="this.style.display='none'"><div><h1>Padaria Jequessene</h1><p>Gestão Comercial | Matola • <span id="dataTop"></span></p></div></div><span id="status" class="status">Online</span></header>
   <main class="wrap">
-    <div id="caixaAlertas"></div>
     <div class="hero"><div><h2 id="saudacao">Olá</h2><p id="infoUser" class="muted"></p><p id="avisoPerm" class="warn"></p></div><div class="hero-right"><img id="meuAvatar" class="avatar-lg" src=""><br><button class="btn-r" onclick="sair()">Sair</button></div></div>
     <div class="flex"><button class="btn-dark" id="btnVoltarAdmin" onclick="voltarAdmin()" style="display:none">Voltar para Admin</button><button class="btn-y" onclick="abrirTroca()">Trocar de Conta (Admin)</button><button onclick="window.open('/api/recibo/diario','_blank')">Fecho do Dia</button></div>
     <div class="kpis"><div class="kpi kpi-green"><span>Vendas Totais</span><b id="tVendas">0 MT</b><small>Semana atual</small></div><div class="kpi kpi-dark"><span>Lucro Líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi kpi-red"><span>Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div>
