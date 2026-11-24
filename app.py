@@ -226,6 +226,7 @@ def register(x: Register, d: Session = Depends(dbdep)):
         try: ok = pwd.verify(x.password, existente.password_hash)
         except Exception: ok = False
         if ok:
+            if not existente.is_active: raise HTTPException(403, "Conta bloqueada. Fala com o Admin.")
             return {"token": make_token(existente), "user": {"nome": existente.nome, "tipo": existente.tipo}, "ja_tinha_conta": True}
         raise HTTPException(409, "Este número já tem conta! Vai para ENTRAR e só cola número + senha.")
     if not x.password or len(x.password) < 4: raise HTTPException(400, "Senha curta, usa 4+ caracteres.")
@@ -240,7 +241,7 @@ def login(x: Login, d: Session = Depends(dbdep)):
     try: ok = pwd.verify(x.password, u.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Telefone ou senha errada.")
-    if not u.is_active: raise HTTPException(403, "Conta bloqueada.")
+    if not u.is_active: raise HTTPException(403, "Conta bloqueada. Fala com o Admin.")
     log_action(d, u.nome, u.tipo, "login", "Entrou")
     return {"token": make_token(u), "user": {"nome": u.nome, "tipo": u.tipo, "is_admin": u.is_admin}}
 
@@ -251,17 +252,35 @@ def me(u: User = Depends(current_user)):
 def pessoas(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     lista = d.query(User).all() if u.is_admin else d.query(User).filter_by(tipo="Cliente").all()
     return [{"id": x.id, "nome": x.nome, "telefone": x.telefone, "idade": x.idade, "email": x.email, "foto": x.foto, "pais": x.pais, "bairro": x.bairro, "tipo": x.tipo, "active": x.is_active} for x in lista]
+
+@app.post("/api/pessoas/{pid}/demitir")
+def demitir_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    u = d.get(User, pid)
+    if not u: raise HTTPException(404, "Pessoa não existe")
+    if u.is_admin: raise HTTPException(400, "Não podes demitir o Admin!")
+    u.is_active = False; d.commit()
+    log_action(d, a.nome, "Admin", "demitir", f"Demitiu {u.nome} - {u.telefone}")
+    return {"ok": True, "msg": f"{u.nome} demitido, sem acesso"}
+
+@app.post("/api/pessoas/{pid}/reativar")
+def reativar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    u = d.get(User, pid)
+    if not u: raise HTTPException(404, "Pessoa não existe")
+    u.is_active = True; d.commit()
+    log_action(d, a.nome, "Admin", "reativar", f"Reativou {u.nome} - {u.telefone}")
+    return {"ok": True, "msg": f"{u.nome} reativado"}
+
 @app.post("/api/admin/switch")
 def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     if not pwd.verify(x.admin_password, a.password_hash): raise HTTPException(401, "Senha do Admin errada!")
     t = d.query(User).filter_by(telefone=clean_tel(x.target_telefone)).first()
     if not t: raise HTTPException(404, "Pessoa não existe.")
+    if not t.is_active: raise HTTPException(403, "Essa conta está demitida / bloqueada.")
     log_action(d, a.nome, "Admin", "troca_conta", f"Admin entrou na conta de {t.nome}")
     return {"token": make_token(t), "user": {"nome": t.nome, "tipo": t.tipo}}
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
-
 @app.post("/api/products")
 def add_product(x: ProdIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     p = Product(**x.model_dump()); p.updated_by = u.nome; d.add(p); d.commit(); log_action(d, u.nome, u.tipo, "produto_criar", x.nome); return {"ok": True}
