@@ -6,62 +6,30 @@
 <title>Padaria | Gestão Comercial</title>
 <link rel="stylesheet" href="/static/style.css">
 <style>
-  .login-bg{
-    background-image:url('/static/fundo.jpg'), url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200') !important;
-    background-size:cover; background-position:center;
-    min-height:100vh;
-    display:flex !important; align-items:center !important; justify-content:flex-end !important;
-    padding:32px !important;
-    position:relative;
-  }
-  .login-overlay{
-    background: linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.15) 55%, rgba(0,0,0,.35) 100%) !important;
-  }
+  .login-bg{background-image:url('/static/fundo.jpg'), url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200') !important;background-size:cover;background-position:center;min-height:100vh;display:flex !important;align-items:center !important;justify-content:flex-end !important;padding:32px !important;position:relative;}
+  .login-overlay{background: linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.15) 55%, rgba(0,0,0,.35) 100%) !important;}
   #app{ background:#faf8f5 !important; background-image:none !important; }
-  .logo-fallback{
-    width:72px;height:72px;border-radius:50%;background:#b88a2e;
-    display:flex;align-items:center;justify-content:center;
-    font-size:32px;margin:0 auto;color:#fff;font-family:Georgia,serif;
-  }
-  .login-card{
-    position:relative !important; z-index:2 !important;
-    width:400px !important; max-width:92vw !important;
-    margin-right:24px !important;
-    background:rgba(255,255,255,.97) !important;
-    border-radius:22px !important; padding:30px 28px !important;
-    box-shadow:0 25px 60px rgba(0,0,0,.45) !important;
-    text-align:center;
-  }
+  .logo-fallback{width:72px;height:72px;border-radius:50%;background:#b88a2e;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto;color:#fff;font-family:Georgia,serif;}
+  .login-card{position:relative !important; z-index:2 !important;width:400px !important; max-width:92vw !important;margin-right:24px !important;background:rgba(255,255,255,.97) !important;border-radius:22px !important; padding:30px 28px !important;box-shadow:0 25px 60px rgba(0,0,0,.45) !important;text-align:center;}
   .login-card h1{ font-size:24px !important; letter-spacing:4px !important; margin:12px 0 4px !important; color:#222 !important; }
   .login-card .sub{ color:#777 !important; font-size:13px !important; margin:0 0 4px !important; }
   .login-card .sub2{ color:#b88a2e !important; font-weight:600 !important; font-size:13px !important; margin:0 0 12px !important; }
-  .login-badge{
-    background:#FFF7E6 !important; color:#8B5E2E !important;
-    border:1px solid #F0D9A0 !important;
-    padding:8px 10px !important; border-radius:999px !important;
-    font-size:12px !important; font-weight:600 !important; margin-bottom:16px !important;
-  }
+  .login-badge{background:#FFF7E6 !important; color:#8B5E2E !important;border:1px solid #F0D9A0 !important;padding:8px 10px !important; border-radius:999px !important;font-size:12px !important; font-weight:600 !important; margin-bottom:16px !important;}
   .login-card h2{ text-align:left !important; font-size:18px !important; margin:0 0 14px !important; }
-  .login-card input, .login-card select{
-    width:100% !important; padding:13px 14px !important; margin-bottom:11px !important;
-    border:1px solid #E5E0D8 !important; border-radius:11px !important;
-    outline:none !important; font-size:14px !important; background:#fff !important;
-  }
+  .login-card input, .login-card select{width:100% !important; padding:13px 14px !important; margin-bottom:11px !important;border:1px solid #E5E0D8 !important; border-radius:11px !important;outline:none !important; font-size:14px !important; background:#fff !important;}
   .login-card input:focus{ border-color:#b88a2e !important; }
-  .login-card .btn-dark{
-    width:100% !important; padding:14px !important; border-radius:11px !important;
-    background:#2F2A26 !important; font-size:15px !important; font-weight:700 !important;
-  }
+  .login-card .btn-dark{width:100% !important; padding:14px !important; border-radius:11px !important;background:#2F2A26 !important; font-size:15px !important; font-weight:700 !important;}
   .login-card .pass-wrap{ position:relative; }
   .login-card .pass-wrap .eye{ position:absolute; right:8px; top:8px; background:#eee; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
   .auth-tabs{ display:flex; gap:8px; margin-bottom:14px; }
   .auth-tabs button{ flex:1; padding:12px; border-radius:11px; border:1px solid #E5E0D8; background:#f5f1ea; font-weight:700; cursor:pointer; }
   .auth-tabs button.active{ background:#2F2A26; color:#fff; border-color:#2F2A26; }
   .link-btn{ background:none; border:none; color:#8B5E2E; font-weight:700; cursor:pointer; margin-top:10px; }
-  @media(max-width:700px){
-    .login-bg{ justify-content:center !important; padding:16px !important; }
-    .login-card{ margin-right:0 !important; width:100% !important; }
-  }
+  .btn-demitir{ background:#c0392b; color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .btn-reativar{ background:#27ae60; color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .badge-demitido{ background:#c0392b; color:#fff; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+  .badge-ativo{ background:#27ae60; color:#fff; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+  @media(max-width:700px){ .login-bg{ justify-content:center !important; padding:16px !important; } .login-card{ margin-right:0 !important; width:100% !important; } }
 </style>
 </head>
 <body>
@@ -115,7 +83,7 @@
     <div class="kpis"><div class="kpi kpi-green"><span>Vendas Totais</span><b id="tVendas">0 MT</b><small>Semana atual</small></div><div class="kpi kpi-dark"><span>Lucro Líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi kpi-red"><span>Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div>
     <div class="tabs"><button onclick="mostrar('dashSec')">Dashboard</button><button onclick="mostrar('pessoasSec')">Pessoas</button><button onclick="mostrar('produtosSec')">Produtos</button><button onclick="mostrar('vendasSec')">Vender</button><button onclick="mostrar('stockSec')">Stock</button><button onclick="mostrar('fornecedorSec')">Fornecedor</button><button onclick="mostrar('encomendasSec')">Encomendas</button><button onclick="mostrar('dividasSec')">Dívidas</button><button onclick="mostrar('adminSec')">Admin</button></div>
     <div id="dashSec" class="card"><h2>Dashboard - Últimos 7 dias</h2><div class="chart-bar" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div><h2 class="mt">Produtos Mais Vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex mt"><button class="btn-dark" onclick="window.open('/api/recibo/diario','_blank')">Recibo Diário PDF</button><button onclick="window.open('/api/export/excel','_blank')">Exportar Excel</button><button class="btn-y" onclick="window.open('/api/export/csv','_blank')">Exportar CSV</button></div><div class="flex"><div class="card flex1"><h3>Mais Vendidos</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por Pagamento</h3><div id="porPag"></div></div></div><div class="kpis" id="dashHoje"></div></div>
-    <div id="pessoasSec" class="card hidden"><h2>1. Gestão de Pessoas</h2><p class="muted">Nome, telefone, idade, email, foto, país / bairro.</p><div id="listaPessoas"></div></div>
+    <div id="pessoasSec" class="card hidden"><h2>1. Gestão de Pessoas</h2><p class="muted">Nome, telefone, idade, email, foto, país / bairro. Só Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
     <div id="produtosSec" class="card hidden"><h2>2. Gestão de Produtos</h2><p class="muted">Lógica: <b>Lucro = Preço - Custo</b>. Quando vendes, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar Produto</h3><input id="pNome" placeholder="Nome - ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de Venda MT"><input id="pCusto" type="number" placeholder="Custo MT - ex: 400"><input id="pStock" type="number" placeholder="Stock inicial"><label class="label">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn-g" id="btnSalvarProd" onclick="salvarProd()">Adicionar Produto</button><div id="listaProd"></div></div>
     <div id="vendasSec" class="card hidden"><h2>3. Financeiro - Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente - ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><label class="label">Quando vai pagar? (se for dívida)</label><input id="vDataPag" type="date"><button class="btn-g" onclick="addVenda()">Vender e Gerar Recibo PDF</button><h3>Saída / Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn-o" onclick="addDespesa()">Registar Saída</button><h3>Histórico de Vendas</h3><div id="listaVendas"></div><h3>Despesas</h3><div id="listaDespesas"></div></div>
     <div id="stockSec" class="card hidden"><h2>4. Gestão de Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
