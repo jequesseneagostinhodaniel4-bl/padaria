@@ -260,28 +260,7 @@ def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depe
     return {"token": make_token(t), "user": {"nome": t.nome, "tipo": t.tipo}}
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "alerta": p.stock <= p.stock_minimo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
-
-# ===== NOVO: ALERTAS DE STOCK - ADMIN + FUNCIONARIO =====
-@app.get("/api/alertas")
-def alertas(u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    if not is_funcionario(u):
-        return {"total": 0, "esgotados": [], "acabando": [], "mensagens": [], "tem_alerta": False}
-    prods = d.query(Product).all()
-    esgotados = [p for p in prods if p.stock <= 0]
-    acabando = [p for p in prods if 0 < p.stock <= 5]
-    msgs = []
-    for p in esgotados:
-        msgs.append(f"❌ ACABOU: {p.nome} - stock 0. Precisa repor urgente!")
-    for p in acabando:
-        msgs.append(f"⚠️ ESTÁ A ACABAR: {p.nome} - só tem {p.stock} restantes!")
-    return {
-        "total": len(esgotados) + len(acabando),
-        "esgotados": [{"id": p.id, "nome": p.nome, "stock": p.stock, "categoria": p.categoria} for p in esgotados],
-        "acabando": [{"id": p.id, "nome": p.nome, "stock": p.stock, "categoria": p.categoria} for p in acabando],
-        "mensagens": msgs,
-        "tem_alerta": len(msgs) > 0
-    }
+    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
 
 @app.post("/api/products")
 def add_product(x: ProdIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
@@ -337,12 +316,8 @@ def add_venda(x: VendaIn, u: User = Depends(current_user), d: Session = Depends(
     msg = f"Ola {x.cliente}! Obrigado pela compra na Padaria Jequessene. {p.nome} x{x.qtd} = {total} MT. Pagamento: {x.pagamento}. Volte sempre!"
     wa = whatsapp_link(x.cliente_tel, msg) if x.cliente_tel else ""
     v = Venda(cliente=x.cliente, cliente_tel=x.cliente_tel, vendedor=u.nome, produto=p.nome, qtd=x.qtd, total=total, custo_total=custo, lucro=lucro, pagamento=x.pagamento, estado=estado, data_pagamento=x.data_pagamento, whatsapp_link=wa); d.add(v); d.commit(); log_action(d, u.nome, u.tipo, "venda", f"{p.nome} x{x.qtd} = {total} MT | Lucro {lucro} MT | {x.pagamento} | {pag_info}")
-    if p.stock <= 0:
-        log_action(d, u.nome, u.tipo, "alerta_stock", f"❌ ACABOU: {p.nome} stock 0")
-    elif p.stock <= 5:
-        log_action(d, u.nome, u.tipo, "alerta_stock", f"⚠️ ESTÁ A ACABAR: {p.nome} só tem {p.stock}")
     d.add(Historico(tipo="SAIDA", produto=p.nome, quantidade=x.qtd, valor=total, motivo="VENDA")); d.commit()
-    return {"ok": True, "total": total, "lucro": lucro, "venda_id": v.id, "whatsapp_link": wa, "pagamento_info": pag_info, "alerta_stock": f"❌ ACABOU: {p.nome}" if p.stock <= 0 else (f"⚠️ ESTÁ A ACABAR: {p.nome} só tem {p.stock}" if p.stock <= 5 else "")}
+    return {"ok": True, "total": total, "lucro": lucro, "venda_id": v.id, "whatsapp_link": wa, "pagamento_info": pag_info}
 @app.post("/api/vendas/{vid}/pagar")
 def pagar(vid: int, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     v = d.get(Venda, vid)
