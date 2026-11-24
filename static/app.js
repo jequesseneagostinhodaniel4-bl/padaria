@@ -1,6 +1,32 @@
-// PADARIA JEQUESSENE V2 - PROFISSIONAL - TUDO ADICIONADO
+// PADARIA JEQUESSENE V2 - COMPLETO + TEMA
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
+// ===== TEMA COMPLETO =====
+async function aplicarTema(){
+  let preto = localStorage.getItem('tema_jeq') === 'preto';
+  if(token){
+    try{ const r = await fetch('/api/tema', {headers: H()}); if(r.ok){ const d = await r.json(); preto = d.tema === 'preto'; localStorage.setItem('tema_jeq', d.tema); } }catch(e){}
+  }
+  document.body.classList.toggle('tema-preto', preto);
+  const b = document.getElementById('btn-tema');
+  if(b) b.innerText = preto ? '☀️ Branco' : '🌙 Preto';
+  if(!b){
+    const btn = document.createElement('button'); btn.id='btn-tema'; btn.onclick=mudarTema; btn.innerText=preto?'☀️ Branco':'🌙 Preto';
+    btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:#111;color:#fff;border:none;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer';
+    document.body.appendChild(btn);
+  }
+}
+async function mudarTema(){
+  const preto = !document.body.classList.contains('tema-preto');
+  document.body.classList.toggle('tema-preto', preto);
+  localStorage.setItem('tema_jeq', preto ? 'preto' : 'branco');
+  const b = document.getElementById('btn-tema');
+  if(b){ b.innerText = preto ? '☀️ Branco' : '🌙 Preto'; b.style.background = preto ? '#fff' : '#111'; b.style.color = preto ? '#111' : '#fff'; }
+  if(token){ try{ await fetch('/api/tema?tema='+(preto?'preto':'branco'), {method:'POST', headers:H()}); }catch(e){} }
+  toast(preto ? 'Modo Preto ativado' : 'Modo Branco ativado');
+}
+document.addEventListener('DOMContentLoaded', aplicarTema);
+setTimeout(aplicarTema, 300);
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
 async function api(u,m,b){ const r=await fetch(u,{method:m||'GET',headers:H(),body:b?JSON.stringify(b):undefined}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.detail||'Erro'); return d; }
 function val(id){ return document.getElementById(id)?.value||''; }
@@ -45,47 +71,27 @@ async function salvarPerfil(){
   try{ const d=await api('/api/me','PUT',{nome:val('perfilNome'),bairro:val('perfilBairro'),email:val('perfilEmail'),foto:FOTO_PERFIL}); toast('Perfil atualizado!'); fecharPerfil(); if(FOTO_PERFIL) ME.foto=FOTO_PERFIL; carregarDados(); }catch(e){ alert(e.message); }
 }
 async function mudarSenha(){ try{ await api('/api/me/senha','POST',{antiga:val('senhaAntiga'),nova:val('senhaNova')}); toast('Senha trocada!'); }catch(e){ alert(e.message); } }
-
-// ===== GRÁFICO NOVO - IGUAL À FOTO - NÃO COLA MAIS =====
 function desenharGraficoProf(dados){
-  const box = document.getElementById('graficoProf');
-  const labels = document.getElementById('graficoLabels');
-  const txt = document.getElementById('resumoSemanaTxt');
-  const semanaEl = document.getElementById('semanaTxt');
+  const box = document.getElementById('graficoProf'); const labels = document.getElementById('graficoLabels'); const txt = document.getElementById('resumoSemanaTxt'); const semanaEl = document.getElementById('semanaTxt');
   if(!box || !dados || !dados.length) return;
   const maxV = Math.max(...dados.map(g=>g.vendas||0), 100);
   const total = dados.reduce((s,g)=>s+(g.vendas||0),0);
-  const hojeV = dados[dados.length-1]?.vendas || 0;
-  const melhor = Math.max(...dados.map(g=>g.vendas||0));
+  const hojeV = dados[dados.length-1]?.vendas || 0; const melhor = Math.max(...dados.map(g=>g.vendas||0));
   if(txt) txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`;
   if(semanaEl) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
-  box.innerHTML = dados.map((g,i)=>{
-    const v = g.vendas || 0;
-    const isHoje = i === dados.length - 1;
-    const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155));
-    const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B';
-    return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%">
-      <span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span>
-      <div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div>
-    </div>`;
-  }).join('');
+  box.innerHTML = dados.map((g,i)=>{ const v = g.vendas || 0; const isHoje = i === dados.length - 1; const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155)); const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B'; return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%"><span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span><div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div></div>`; }).join('');
   if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center">${g.label}</span>`).join('');
-  const avatar = document.getElementById('dashAvatar');
-  if(avatar && ME?.foto) avatar.src = ME.foto;
+  const avatar = document.getElementById('dashAvatar'); if(avatar && ME?.foto) avatar.src = ME.foto;
 }
-
 async function carregarDados(){
-  if(!token) return;
+  if(!token) return; aplicarTema();
   try{ ME=await api('/api/me'); }catch(e){ localStorage.removeItem('token'); token=''; location.reload(); return; }
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('saudacao').innerText='Olá, '+ME.nome;
   document.getElementById('infoUser').innerText=ME.tipo+' • '+ME.telefone;
-  const foto=ME.foto||'';
-  if(foto){ document.getElementById('meuAvatar').src=foto; document.getElementById('sideFoto').src=foto; }
-  const isAdmin=ME.is_admin;
-  const isFunc=ME.tipo==='Funcionário';
-  const isCliente=ME.tipo==='Cliente';
+  const foto=ME.foto||''; if(foto){ document.getElementById('meuAvatar').src=foto; document.getElementById('sideFoto').src=foto; }
+  const isAdmin=ME.is_admin; const isFunc=ME.tipo==='Funcionário'; const isCliente=ME.tipo==='Cliente';
   document.querySelectorAll('#menuGestao button, #tituloGestao').forEach(el=>{ el.style.display = isAdmin ? '' : 'none'; });
   if(isCliente){
     document.querySelectorAll('#menuOperacao button').forEach(b=>{ const s=b.getAttribute('data-sec'); if(!['produtosSec','encomendasSec'].includes(s)) b.style.display='none'; });
@@ -95,12 +101,10 @@ async function carregarDados(){
   else { mostrarSec('dashSec', document.querySelector('[data-sec="dashSec"]')); }
   try{
     const dash=await api('/api/dashboard');
-    // ===== DASHBOARD NOVO - IGUAL À FOTO =====
     const elV = document.getElementById('tVendas'); if(elV) elV.innerHTML = dash.semana.vendas + ' <small>MT</small>';
     const elL = document.getElementById('tLucro'); if(elL) elL.innerHTML = dash.semana.lucro + ' <small>MT</small>';
     const elC = document.getElementById('tClientes'); if(elC) elC.innerText = dash.totais.clientes;
     const elD = document.getElementById('tDividas'); if(elD) elD.innerHTML = dash.totais.dividas + ' <small>MT</small>';
-    // CORRIGIDO: usa graficoProf, não o grafico velho
     desenharGraficoProf(dash.grafico);
     document.getElementById('maisVendidos').innerHTML=dash.mais_vendidos.map(m=>`<p>${m.produto} - ${m.qtd}</p>`).join('')||'Ainda sem vendas';
     document.getElementById('maisVendidosGrid').innerHTML=dash.mais_vendidos.map(m=>`<div class="prod-card"><b>${m.produto}</b><p>${m.qtd} vendidos</p></div>`).join('');
@@ -169,10 +173,8 @@ async function baixarComToken(url, nomeFicheiro){
   const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: { 'Authorization': 'Bearer ' + token } });
   if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
   if(!res.ok){ alert('Erro ao baixar: ' + res.status); return; }
-  const blob = await res.blob();
-  const u = window.URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro;
-  document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
+  const blob = await res.blob(); const u = window.URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
   toast('✅ Baixado: ' + nomeFicheiro);
 }
 async function fechoDia(){
@@ -184,18 +186,7 @@ async function fechoDia(){
     const r = await res.json();
     let modal = document.getElementById('modalFecho');
     if(!modal){ modal = document.createElement('div'); modal.id='modalFecho'; modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(modal); }
-    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px;border-radius:16px;font-family:Arial">
-      <div style="text-align:center"><h2>🍞 PADARIA JEQUESSENE</h2><p>Fecho do Dia - ${r.data}</p><hr style="border:1px dashed #ccc;margin:12px 0"></div>
-      <p>Vendas Hoje: <b>${r.vendas_qtd} - ${r.vendas_total} MT</b></p>
-      <p>Compras Hoje: <b>${r.compras_total} MT</b></p>
-      <p>Despesas Hoje: <b>${r.despesas_total} MT</b></p>
-      <p>M-Pesa: ${r.mpesa} MT | e-Mola: ${r.emola} MT | Dinheiro: ${r.dinheiro} MT</p>
-      <h2 style="margin:12px 0">LUCRO LÍQUIDO: ${r.lucro_liquido} MT</h2>
-      <hr style="border:1px dashed #ccc;margin:12px 0">
-      <b>Vendas:</b><br>${r.vendas.map(v=>`${v.produto} x${v.qtd} - ${v.total} MT (${v.pagamento})`).join('<br>') || 'Sem vendas'}
-      <br><br><b>Compras:</b><br>${r.compras.map(c=>`${c.produto} x${c.qtd} - ${c.total} MT (${c.fornecedor})`).join('<br>') || 'Sem compras'}
-      <div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div>
-    </div>`;
+    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px;border-radius:16px;font-family:Arial"><div style="text-align:center"><h2>🍞 PADARIA JEQUESSENE</h2><p>Fecho do Dia - ${r.data}</p><hr></div><p>Vendas Hoje: <b>${r.vendas_qtd} - ${r.vendas_total} MT</b></p><p>Compras Hoje: <b>${r.compras_total} MT</b></p><p>Despesas Hoje: <b>${r.despesas_total} MT</b></p><p>M-Pesa: ${r.mpesa} MT | e-Mola: ${r.emola} MT | Dinheiro: ${r.dinheiro} MT</p><h2>LUCRO LÍQUIDO: ${r.lucro_liquido} MT</h2><hr><b>Vendas:</b><br>${r.vendas.map(v=>`${v.produto} x${v.qtd} - ${v.total} MT (${v.pagamento})`).join('<br>') || 'Sem vendas'}<br><br><b>Compras:</b><br>${r.compras.map(c=>`${c.produto} x${c.qtd} - ${c.total} MT (${c.fornecedor})`).join('<br>') || 'Sem compras'}<div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div></div>`;
     modal.style.display='flex';
   }catch(e){ alert('Erro fecho: ' + e.message); }
 }
