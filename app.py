@@ -193,7 +193,6 @@ def funcionario_only(u: User = Depends(current_user)):
     return u
 
 app = FastAPI(title="PADARIA JEQUESSENE")
-# ===== O QUE FALTAVA 1: CORS =====
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
@@ -223,6 +222,8 @@ class SenhaIn(BaseModel):
     antiga: str; nova: str
 class PessoaEditIn(BaseModel):
     nome: str = ""; bairro: str = ""; tipo: str = ""; email: str = ""
+class PerfilIn(BaseModel):
+    nome: str = ""; bairro: str = ""; foto: str = ""; email: str = ""
 
 @app.post("/api/register")
 def register(x: Register, d: Session = Depends(dbdep)):
@@ -256,7 +257,16 @@ def login(x: Login, d: Session = Depends(dbdep)):
 def me(u: User = Depends(current_user)):
     return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin}
 
-# ===== O QUE FALTAVA 2: MUDAR SENHA =====
+@app.put("/api/me")
+def atualizar_meu_perfil(x: PerfilIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    if x.nome: u.nome = x.nome
+    if x.bairro: u.bairro = x.bairro
+    if x.email: u.email = x.email
+    if x.foto: u.foto = x.foto
+    d.commit()
+    log_action(d, u.nome, u.tipo, "perfil_foto", "Trocou foto / perfil")
+    return {"ok": True, "msg": "Perfil atualizado!", "foto": u.foto}
+
 @app.post("/api/me/senha")
 def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     try: ok = pwd.verify(x.antiga, u.password_hash)
@@ -289,7 +299,6 @@ def reativar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depend
     log_action(d, a.nome, "Admin", "reativar", f"Reativou {u.nome} - {u.telefone}")
     return {"ok": True, "msg": f"{u.nome} reativado"}
 
-# ===== O QUE FALTAVA 3: APAGAR + EDITAR PESSOA =====
 @app.delete("/api/pessoas/{pid}")
 def apagar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     u = d.get(User, pid)
@@ -311,15 +320,14 @@ def editar_pessoa(pid: int, x: PessoaEditIn, a: User = Depends(admin_only), d: S
     d.commit()
     return {"ok": True, "msg": "Pessoa atualizada"}
 
-# ===== O QUE FALTAVA 4: ALERTAS DE STOCK =====
 @app.get("/api/alertas")
 def alertas(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     prods = d.query(Product).all()
     esgotados = [p for p in prods if p.stock <= 0]
     acabando = [p for p in prods if 0 < p.stock <= p.stock_minimo]
     msgs = []
-    for p in esgotados: msgs.append(f"❌ ACABOU: {p.nome} - stock 0")
-    for p in acabando: msgs.append(f"⚠️ ESTÁ A ACABAR: {p.nome} - só tem {p.stock}")
+    for p in esgotados: msgs.append(f"ACABOU: {p.nome} - stock 0")
+    for p in acabando: msgs.append(f"ESTÁ A ACABAR: {p.nome} - só tem {p.stock}")
     return {"total": len(msgs), "mensagens": msgs, "tem_alerta": len(msgs) > 0}
 
 @app.post("/api/admin/switch")
@@ -341,10 +349,8 @@ def edit_product(pid: int, x: ProdIn, u: User = Depends(funcionario_only), d: Se
     p = d.get(Product, pid)
     if not p: raise HTTPException(404, "Não existe")
     old = f"{p.nome} {p.preco} MT stock {p.stock}"
-    # ===== CORRIGIDO: não apaga foto se não enviares foto nova =====
     dados = x.model_dump()
-    if not dados.get("foto"):
-        dados.pop("foto")
+    if not dados.get("foto"): dados.pop("foto")
     for k, v in dados.items(): setattr(p, k, v)
     p.updated_by = u.nome; p.updated_at = agora(); d.commit(); log_action(d, u.nome, u.tipo, "produto_editar", f"De {old} para {p.nome} {p.preco} MT"); return {"ok": True}
 @app.delete("/api/products/{pid}")
