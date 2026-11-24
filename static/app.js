@@ -1,145 +1,142 @@
-const FOTOS = {"bolo":"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600","pão":"https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600","pao":"https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600","croissant":"https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600","chamuça":"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600","pudim":"https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600","aniversario":"https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600","pastel":"https://images.unsplash.com/photo-1551024506-0bccd828d307?w=600","donut":"https://images.unsplash.com/photo-1551024601-bec78aea704b?w=600","default":"https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=600"};
-function fotoDo(nome){ let n=(nome||"").toLowerCase(); for(let k in FOTOS){ if(n.includes(k)) return FOTOS[k]; } return FOTOS.default; }
-function fotoProduto(p){ if(p.foto) return p.foto; return fotoDo(p.nome); }
-function htmlFotoProduto(p){ let src=fotoProduto(p); return '<img src="'+src+'" class="prod-foto" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="prod-foto-fallback" style="display:none">'+emojiProd(p.nome)+'</div>'; }
-let token = localStorage.getItem('padaria_token') || '';
-let me = null, _prods = [], _editId = null, _fotoTemp = '';
-async function api(p, opt={}){ opt.headers = opt.headers || {}; if(token) opt.headers['Authorization']='Bearer '+token; let r=await fetch(p,opt); let t=await r.text(); let j={}; try{ j=JSON.parse(t);}catch(e){ j={detail:t}; } if(!r.ok) throw new Error(j.detail||('Erro '+r.status)); return j; }
-function aplicarPermissoes(){
-  if(!me) return;
-  let tabs=document.querySelectorAll('.tabs button');
-  let barraBtns=document.querySelectorAll('#barra button');
-  let kpis=document.querySelector('.kpis');
-  let barra=document.getElementById('barra');
-  if(barra) barra.classList.remove('hidden');
-  if(!me.is_admin && me.tipo==='Cliente'){
-    tabs.forEach(b=>{ b.style.display = b.innerText.includes('Produtos') ? 'block' : 'none'; });
-    barraBtns.forEach(b=>{ b.style.display = b.innerText.includes('Produtos') ? 'block' : 'none'; });
-    if(kpis) kpis.style.display='none';
-    document.querySelectorAll('.flex button').forEach(b=>{ if(b.innerText.includes('Trocar')||b.innerText.includes('Fecho')) b.style.display='none'; });
-    setTimeout(()=> mostrar('produtosSec'),200);
-    return;
-  }
-  if(!me.is_admin && (me.tipo==='Funcionário'||me.tipo==='Funcionario')){
-    tabs.forEach(b=>{ let t=b.innerText; b.style.display=(t.includes('Produtos')||t.includes('Vender')||t.includes('Stock')||t.includes('Encomendas')||t.includes('Dashboard'))?'block':'none'; });
-    barraBtns.forEach(b=>{ let t=b.innerText; b.style.display=(t.includes('Produtos')||t.includes('Vender')||t.includes('Encomendas'))?'block':'none'; });
-    if(kpis) kpis.style.display='grid';
-    return;
-  }
-  tabs.forEach(b=> b.style.display='block');
-  barraBtns.forEach(b=> b.style.display='block');
-  if(kpis) kpis.style.display='grid';
+// ===== PADARIA JEQUESSENE - APP.JS COMPLETO - TUDO JUNTO =====
+
+// --- 1. TOKEN / LOGIN ---
+function getToken(){ return localStorage.getItem('token') || ''; }
+function setToken(t){ localStorage.setItem('token', t); }
+function logout(){ localStorage.removeItem('token'); location.reload(); }
+
+async function api(url, method='GET', body=null){
+  const opt = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() } };
+  if(body) opt.body = JSON.stringify(body);
+  const r = await fetch(url, opt);
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.detail || 'Erro');
+  return d;
 }
-function mostrar(id){
-  if(me && !me.is_admin && me.tipo==='Cliente'){ if(id!=='produtosSec'){ alert('Só podes ver Produtos.'); id='produtosSec'; } }
-  if(me && !me.is_admin && (me.tipo==='Funcionário'||me.tipo==='Funcionario')){ if(id==='adminSec'||id==='dividasSec'||id==='fornecedorSec'||id==='pessoasSec'){ alert('Sem permissão.'); return; } }
-  ['dashSec','pessoasSec','produtosSec','vendasSec','stockSec','fornecedorSec','encomendasSec','dividasSec','adminSec'].forEach(x=>{ let el=document.getElementById(x); if(el) el.classList.add('hidden'); });
-  let alvo=document.getElementById(id); if(alvo) alvo.classList.remove('hidden'); carregarDados(); if(id==='adminSec') carregarPainelAdmin();
-}
-// === LOGIN / REGISTO CORRIGIDO ===
-function mostrarLogin(){
-  let l=document.getElementById('formLogin'); let r=document.getElementById('formRegistar');
-  if(l) l.classList.remove('hidden'); if(r) r.classList.add('hidden');
-  let tl=document.getElementById('tabLogin'); let tr=document.getElementById('tabRegisto');
-  if(tl) tl.classList.add('active'); if(tr) tr.classList.remove('active');
-  let rt=document.getElementById('rTel'); let lt=document.getElementById('loginTel');
-  if(rt && rt.value && lt) lt.value=rt.value;
-}
-function mostrarRegisto(){
-  let l=document.getElementById('formLogin'); let r=document.getElementById('formRegistar');
-  if(l) l.classList.add('hidden'); if(r) r.classList.remove('hidden');
-  let tl=document.getElementById('tabLogin'); let tr=document.getElementById('tabRegisto');
-  if(tl) tl.classList.remove('active'); if(tr) tr.classList.add('active');
-}
-async function login(){
+
+// --- 2. LOGIN / REGISTO ---
+async function fazerLogin(){
+  const tel = document.getElementById('loginTel')?.value || document.getElementById('telefone')?.value;
+  const pass = document.getElementById('loginPass')?.value || document.getElementById('senha')?.value;
+  if(!tel || !pass) return alert('Escreve telefone e senha');
   try{
-    let tel=document.getElementById('loginTel').value.trim();
-    let senha=document.getElementById('loginSenha').value;
-    if(!tel||!senha) return alert('Põe número + senha!');
-    let d=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:tel,password:senha})});
-    token=d.token; localStorage.setItem('padaria_token',token); await carregarMe();
-  }catch(e){ document.getElementById('authMsg').innerText='❌ '+e.message; }
+    const d = await api('/api/login','POST',{telefone: tel, password: pass});
+    setToken(d.token);
+    alert('Bem-vindo, ' + d.user.nome);
+    location.reload();
+  }catch(e){ alert(e.message); }
 }
-async function registar(){
+
+async function fazerRegisto(){
+  const nome = document.getElementById('regNome')?.value;
+  const tel = document.getElementById('regTel')?.value;
+  const pass = document.getElementById('regPass')?.value;
+  if(!nome || !tel || !pass) return alert('Preenche nome, telefone e senha');
   try{
-    let tel=document.getElementById('rTel').value.trim();
-    let senha=document.getElementById('rSenha').value;
-    // SE JA TEM CONTA, ENTRA DIRETO - NAO CRIA DE NOVO
-    try{
-      let d=await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefone:tel,password:senha})});
-      token=d.token; localStorage.setItem('padaria_token',token);
-      alert('Já tinhas conta! Entraste direto.');
-      await carregarMe(); return;
-    }catch(e){}
-    let d=await api('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('rNome').value.trim(),telefone:tel,idade:parseInt(document.getElementById('rIdade').value)||18,email:document.getElementById('rEmail').value.trim(),foto:_fotoTemp,pais:document.getElementById('rPais').value,bairro:document.getElementById('rBairro').value.trim(),tipo:document.getElementById('rTipo').value,password:senha})});
-    token=d.token; localStorage.setItem('padaria_token',token); await carregarMe();
-  }catch(e){
-    if((e.message||'').toLowerCase().includes('existe')||(e.message||'').toLowerCase().includes('já tem')||(e.message||'').toLowerCase().includes('regist')){
-      document.getElementById('authMsg').innerText='⚠️ Este número já tem conta! Vai para ENTRAR e só cola número + senha.';
-      let lt=document.getElementById('loginTel'); let rt=document.getElementById('rTel');
-      if(lt && rt) lt.value=rt.value;
-      mostrarLogin();
-    } else document.getElementById('authMsg').innerText='❌ '+e.message;
-  }
+    const d = await api('/api/register','POST',{nome, telefone: tel, password: pass, tipo: document.getElementById('regTipo')?.value || 'Cliente'});
+    setToken(d.token);
+    alert(d.ja_tinha_conta ? 'Já tinhas conta, entraste direto!' : 'Conta criada!');
+    location.reload();
+  }catch(e){ alert(e.message); }
 }
-function lerFoto(e, onde){ if(!e.target.files[0]) return; let r=new FileReader(); r.onload=ev=>{ _fotoTemp=ev.target.result; if(onde) document.getElementById(onde).src=_fotoTemp; }; r.readAsDataURL(e.target.files[0]); }
-async function carregarMe(){ try{ me=await api('/api/me'); document.getElementById('status').innerText='● Ligado • '+me.tipo; document.getElementById('authSec').classList.add('hidden'); let bg=document.getElementById('loginBg'); if(bg) bg.classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); let barra=document.getElementById('barra'); if(barra) barra.classList.remove('hidden'); document.getElementById('saudacao').innerText='Olá, '+me.nome; document.getElementById('infoUser').innerText=me.tipo+' • '+me.telefone+' • '+me.idade+' anos • '+me.pais+' - '+me.bairro; if(me.foto) document.getElementById('meuAvatar').src=me.foto; document.getElementById('btnVoltarAdmin').style.display=localStorage.getItem('modo_admin')?'block':'none'; document.getElementById('avisoPerm').innerText=me.is_admin?'Admin Jequessene — Acesso total.':(me.tipo==='Funcionário'||me.tipo==='Funcionario')?'Funcionário — Vês o teu trabalho.':'Cliente — Podes ver Produtos.'; aplicarPermissoes(); carregarDados(); }catch(e){ sair(); } }
-function sair(){ token=''; localStorage.removeItem('padaria_token'); localStorage.removeItem('modo_admin'); let barra=document.getElementById('barra'); if(barra) barra.classList.add('hidden'); location.reload(); }
-function abrirTroca(){ let m=document.getElementById('modalTroca'); if(!m) return; m.classList.remove('hidden'); m.style.display='flex'; carregarListaTroca(); }
-function fecharTroca(){ let m=document.getElementById('modalTroca'); if(!m) return; m.classList.add('hidden'); m.style.display='none'; }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') fecharTroca(); });
-async function carregarListaTroca(){ try{ let u=await api('/api/pessoas'); document.getElementById('listaTroca').innerHTML=u.map(x=>'<div style="display:flex;justify-content:space-between;padding:10px;border:1px solid #eee;border-radius:8px;margin:6px 0"><span><b>'+x.nome+'</b><br><small>'+x.telefone+' • '+x.tipo+'</small></span><button style="width:auto;padding:8px 12px" onclick="document.getElementById(\'trocaTel\').value=\''+x.telefone+'\'">Escolher</button></div>').join(''); }catch(e){} }
-async function trocarConta(){ let tel=document.getElementById('trocaTel').value.trim(); let senha=document.getElementById('trocaSenha').value; if(!tel||!senha) return alert('Telefone + tua senha de Admin!'); try{ let d=await api('/api/admin/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_telefone:tel,admin_password:senha})}); localStorage.setItem('modo_admin',token); token=d.token; localStorage.setItem('padaria_token',token); fecharTroca(); alert('Agora a ver como '+d.user.nome); location.reload(); }catch(e){ alert('❌ '+e.message); } }
-async function voltarAdmin(){ let t=localStorage.getItem('modo_admin'); if(!t) return; token=t; localStorage.setItem('padaria_token',token); localStorage.removeItem('modo_admin'); location.reload(); }
-function emojiProd(nome){ let n=(nome||"").toLowerCase(); if(n.includes('bolo')) return '🍫'; if(n.includes('pão')||n.includes('pao')) return '🥖'; if(n.includes('pastel')) return '🧁'; if(n.includes('croissant')) return '🥐'; if(n.includes('chamu')) return '🥟'; if(n.includes('sumo')) return '🧃'; if(n.includes('donut')) return '🍩'; if(n.includes('cupcake')) return '🧁'; if(n.includes('pudim')) return '🍮'; return '🍰'; }
-async function carregarDados(){
+
+// --- 3. PRODUTOS ---
+async function carregarProdutos(){
+  const el = document.getElementById('listaProdutos');
+  if(!el) return;
   try{
-    let dash=await api('/api/dashboard');
-    document.getElementById('dashHoje').innerHTML='<div class="kpi" style="background:#1a7a4a;color:#fff"><span>Hoje</span><b>'+dash.hoje.lucro+' MT lucro</b><small>Vendas '+dash.hoje.vendas+' MT • '+dash.hoje.n+' vendas</small></div><div class="kpi" style="background:#191410;color:#fff"><span>Semana</span><b>'+dash.semana.lucro+' MT</b><small>Vendas '+dash.semana.vendas+' MT</small></div><div class="kpi" style="background:#b88a2e;color:#fff"><span>Mês</span><b>'+dash.mes.lucro+' MT</b><small>Vendas '+dash.mes.vendas+' MT</small></div><div class="kpi"><span>Clientes</span><b>'+dash.totais.clientes+'</b><small>Funcionários '+dash.totais.funcionarios+' • Produtos '+dash.totais.produtos+'</small></div>';
-    document.getElementById('grafico').innerHTML=dash.grafico.map(g=>'<div style="height:'+Math.max(6,Math.min(100,g.vendas/100))+'%"><span>'+g.vendas+' MT</span></div>').join('');
-    document.getElementById('graficoLabels').innerHTML=dash.grafico.map(g=>'<span>'+g.label+'</span>').join('');
-    document.getElementById('maisVendidos').innerHTML=dash.mais_vendidos.map((m,i)=>(i+1)+'. <b>'+m.produto+'</b> — '+m.qtd+' vendidos').join('<br>')||'Sem vendas';
-    document.getElementById('porPag').innerHTML=Object.entries(dash.por_pagamento).map(([k,v])=>k+': <b>'+v+' MT</b>').join('<br>')||'Sem vendas';
-    document.getElementById('maisVendidosGrid').innerHTML=dash.mais_vendidos.map(m=>'<div class="prod">'+htmlFotoProduto({nome:m.produto,foto:''})+'<div style="padding:8px"><b>'+m.produto+'</b><br><small>'+m.qtd+' vendidos</small></div></div>').join('')||'Sem vendas';
-    document.getElementById('tVendas').innerText=dash.totais.vendas_total+' MT';
-    document.getElementById('tLucro').innerText=dash.totais.lucro_liquido+' MT';
-    document.getElementById('tClientes').innerText=dash.totais.clientes;
-    document.getElementById('tDividas').innerText=dash.totais.dividas+' MT';
-    let pessoas=await api('/api/pessoas');
-    document.getElementById('listaPessoas').innerHTML='<table><tr><th>Foto</th><th>Nome</th><th>Telefone</th><th>Idade</th><th>Tipo</th><th>Bairro</th><th>Ação</th></tr>'+pessoas.map(p=>'<tr><td>'+(p.foto?'<img src="'+p.foto+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover">':'—')+'</td><td>'+p.nome+'<br><small>'+p.email+'</small></td><td>'+p.telefone+'</td><td>'+p.idade+'</td><td>'+p.tipo+'</td><td>'+p.pais+' - '+p.bairro+'</td><td>'+(me.is_admin?'<button style="width:auto;padding:7px" onclick="document.getElementById(\'trocaTel\').value=\''+p.telefone+'\';abrirTroca()">Entrar</button>':'')+'</td></tr>').join('')+'</table>';
-    let prods=await api('/api/products'); _prods=prods;
-    let podeEditar=me&&(me.is_admin||me.tipo==='Funcionário'||me.tipo==='Funcionario');
-    let filtro=(document.getElementById('pesquisaProd').value||'').toLowerCase();
-    let filtrados=prods.filter(p=>p.nome.toLowerCase().includes(filtro));
-    document.getElementById('listaProd').innerHTML='<table><tr><th>Produto</th><th>Preço</th><th>Stock</th><th>Lucro</th><th>Ação</th></tr>'+filtrados.map(p=>'<tr><td>'+(p.foto?'<img src="'+p.foto+'" style="width:36px;height:36px;border-radius:6px;object-fit:cover">':emojiProd(p.nome))+' '+p.nome+'<br><small>'+p.categoria+' • '+(p.updated_by||'-')+'</small></td><td>'+p.preco+' MT</td><td>'+p.stock+' '+(p.alerta?'ESTÁ A ACABAR!':'')+'</td><td>'+p.lucro+' MT</td><td>'+(podeEditar?'<button style="width:auto;padding:8px" onclick="editarProd('+p.id+')">Editar</button>':'')+' '+(me.is_admin?'<button style="width:auto;padding:8px;background:#c0392b" onclick="apagarProd('+p.id+')">Apagar</button>':'')+'</td></tr>').join('')+'</table>';
-    document.getElementById('vProd').innerHTML=prods.map(p=>'<option value="'+p.id+'">'+p.nome+' - '+p.preco+' MT (Stock: '+p.stock+')</option>').join('');
-    document.getElementById('gridProd').innerHTML=prods.map(p=>'<div class="prod" onclick="vendaRapida('+p.id+')">'+htmlFotoProduto(p)+'<div style="padding:8px"><b>'+p.nome+'</b><br>'+p.preco+' MT<br><small>Stock: '+p.stock+' '+(p.alerta?'• A acabar':'')+'</small></div></div>').join('');
-    document.getElementById('listaStock').innerHTML=prods.map(p=>'<div style="display:flex;justify-content:space-between;padding:10px;border:1px solid #eee;border-radius:8px;margin:6px 0"><span><b>'+p.nome+'</b> — '+p.categoria+'</span><span>'+p.stock+' un '+(p.alerta?'<b style="color:#c0392b">ESTÁ A ACABAR!</b>':'OK')+'</span></div>').join('');
-    document.getElementById('alertaStock').innerText=prods.filter(p=>p.alerta).length?'ATENÇÃO: '+prods.filter(p=>p.alerta).map(p=>p.nome).join(', ')+' está a acabar!':'Stock OK';
-    let fin=await api('/api/financeiro');
-    document.getElementById('listaVendas').innerHTML='<table><tr><th>Data/Hora</th><th>Cliente</th><th>Produto</th><th>Total</th><th>Lucro</th><th>Recibo</th><th>WhatsApp</th></tr>'+fin.vendas.map(v=>'<tr><td>'+new Date(v.data).toLocaleDateString()+' '+v.hora+'</td><td>'+v.cliente+'<br><small>'+v.vendedor+' • '+v.pagamento+' • '+v.estado+'</small></td><td>'+v.produto+' x'+v.qtd+'</td><td>'+v.total+' MT</td><td>'+v.lucro+' MT</td><td><button style="width:auto;padding:7px" onclick="window.open(\'/api/recibo/venda/'+v.id+'\',\'_blank\')">PDF</button></td><td>'+(v.whatsapp_link?'<a href="'+v.whatsapp_link+'" target="_blank" style="color:#1a7a4a;font-weight:700">Enviar</a>':'')+'</td></tr>').join('')+'</table>';
-    document.getElementById('listaDividas').innerHTML=fin.dividas.map(d=>'<div style="padding:10px;border:1px solid #e9d8a6;background:#fdf8ec;border-radius:8px;margin:6px 0"><b>'+d.cliente+'</b> ('+d.cliente_tel+') deve <b>'+d.total+' MT</b> — '+d.produto+' — '+d.data+'<br>Quando paga: <b>'+(d.data_pagamento||'Sem data')+'</b> <button style="width:auto" onclick="pagarDivida('+d.id+')">Marcar Pago</button> '+(d.whatsapp_link?'<a href="'+d.whatsapp_link+'" target="_blank" style="color:#1a7a4a;font-weight:700;margin-left:8px">Cobrar no WhatsApp</a>':'')+'</div>').join('')||'Nenhuma dívida.';
-    document.getElementById('listaDespesas').innerHTML=fin.despesas.map(x=>x.descricao+': '+x.valor+' MT — '+x.criado_por+' — '+x.categoria).join('<br>')||'Nenhuma';
-    document.getElementById('listaCompras').innerHTML='<table><tr><th>Data</th><th>Fornecedor</th><th>Produto</th><th>Total</th><th>Recibo</th></tr>'+fin.compras.map(c=>'<tr><td>'+new Date(c.data).toLocaleDateString()+'</td><td>'+c.fornecedor+'</td><td>'+c.produto+' x'+c.qtd+'</td><td>'+c.total+' MT</td><td><button style="width:auto;padding:7px" onclick="window.open(\'/api/recibo/compra/'+c.id+'\',\'_blank\')">PDF</button></td></tr>').join('')+'</table>';
-    let forns=await api('/api/fornecedores');
-    document.getElementById('listaForn').innerHTML='<table><tr><th>Nome</th><th>Telefone</th><th>Produto</th><th>Preço</th><th>Local</th></tr>'+forns.map(f=>'<tr><td>'+f.nome+'</td><td>'+f.telefone+'</td><td>'+f.produto+'</td><td>'+f.preco+' MT</td><td>'+f.localizacao+'</td></tr>').join('')+'</table>';
-    document.getElementById('cForn').innerHTML=forns.map(f=>'<option value="'+f.id+'">'+f.nome+' - '+f.produto+'</option>').join('');
-    let enc=await api('/api/encomendas');
-    document.getElementById('listaEnc').innerHTML=enc.map(e=>'<div style="background:#faf8f5;border:1px solid #e9e2d9;padding:10px;border-radius:8px;margin:6px 0"><b>'+e.tipo+'</b> - '+e.cliente+' ('+e.telefone+')<br>Entrega: '+e.data_entrega+' | '+e.preco+' MT | '+e.sinal+' | '+e.estado+' '+(e.estado==='Pendente'?'<button onclick="entregarEnc('+e.id+')">Entregar</button>':'')+' <a href="'+e.whatsapp_link+'" target="_blank" style="color:#1a7a4a;font-weight:700">WhatsApp</a><br>Obs: '+e.obs+'</div>').join('')||'Nenhuma encomenda';
-  }catch(e){ console.log(e); }
+    const prods = await api('/api/products');
+    el.innerHTML = prods.map(p => `
+      <div style="border:1px solid #ddd;border-radius:12px;padding:12px;margin:8px 0;background:${p.stock<=0 ? '#ffe0e0' : p.stock<=5 ? '#fff3cd' : '#fff'}">
+        <b>${p.nome}</b> - ${p.categoria}<br>
+        Preço: <b>${p.preco} MT</b> | Stock: <b>${p.stock}</b>
+        ${p.stock<=0 ? '<br><span style="color:red;font-weight:bold">❌ ACABOU</span>' : p.stock<=5 ? '<br><span style="color:#e67e00;font-weight:bold">⚠️ ESTÁ A ACABAR - só tem '+p.stock+'</span>' : ''}
+        <br><button onclick="venderProduto(${p.id},'${p.nome}')" style="margin-top:8px;padding:8px 14px;border-radius:8px;background:#ff9800;color:#fff;border:none">Vender</button>
+      </div>
+    `).join('') || '<p>Sem produtos</p>';
+  }catch(e){ el.innerHTML = '<p>Entra primeiro para ver produtos</p>'; }
 }
-function editarProd(id){ let p=_prods.find(x=>x.id==id); if(!p) return; _editId=id; document.getElementById('pNome').value=p.nome; document.getElementById('pCat').value=p.categoria; document.getElementById('pPreco').value=p.preco; document.getElementById('pCusto').value=p.custo; document.getElementById('pStock').value=p.stock; document.getElementById('btnSalvarProd').innerText='Guardar Edição'; mostrar('produtosSec'); }
-async function salvarProd(){ let dados={nome:document.getElementById('pNome').value,categoria:document.getElementById('pCat').value,preco:parseFloat(document.getElementById('pPreco').value)||0,custo:parseFloat(document.getElementById('pCusto').value)||0,stock:parseInt(document.getElementById('pStock').value)||0,stock_minimo:5,foto:_fotoTemp}; try{ if(_editId){ await api('/api/products/'+_editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)}); alert('Editado!'); _editId=null; document.getElementById('btnSalvarProd').innerText='Adicionar Produto'; } else{ await api('/api/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)}); alert('Criado!'); } _fotoTemp=''; carregarDados(); }catch(e){ alert('❌ '+e.message); } }
-async function apagarProd(id){ if(!confirm('Apagar?')) return; await api('/api/products/'+id,{method:'DELETE'}); carregarDados(); }
-async function vendaRapida(pid){ document.getElementById('vProd').value=pid; mostrar('vendasSec'); }
-async function addVenda(){ try{ let d=await api('/api/vendas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({produto_id:parseInt(document.getElementById('vProd').value),qtd:parseInt(document.getElementById('vQtd').value)||1,cliente:document.getElementById('vCliente').value||'Cliente Balcão',cliente_tel:document.getElementById('vTel').value,pagamento:document.getElementById('vPag').value,data_pagamento:document.getElementById('vDataPag').value})}); if(confirm('Venda '+d.total+' MT | Lucro '+d.lucro+' MT\nVer recibo PDF?')) window.open('/api/recibo/venda/'+d.venda_id,'_blank'); if(d.whatsapp_link) window.open(d.whatsapp_link,'_blank'); carregarDados(); }catch(e){ alert('❌ '+e.message); } }
-async function pagarDivida(id){ await api('/api/vendas/'+id+'/pagar',{method:'POST'}); carregarDados(); }
-async function addDespesa(){ try{ await api('/api/despesas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({descricao:document.getElementById('sDesc').value,valor:parseFloat(document.getElementById('sValor').value)||0,categoria:document.getElementById('sCat').value})}); alert('Despesa!'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addForn(){ try{ await api('/api/fornecedores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('fNome').value,telefone:document.getElementById('fTel').value,produto:document.getElementById('fProd').value,preco:parseFloat(document.getElementById('fPreco').value)||0,localizacao:document.getElementById('fLocal').value})}); alert('Fornecedor!'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addCompra(){ try{ let d=await api('/api/compras',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fornecedor_id:parseInt(document.getElementById('cForn').value),produto:document.getElementById('cProd').value,qtd:parseInt(document.getElementById('cQtd').value)||1,preco_unitario:parseFloat(document.getElementById('cPreco').value)||0,pagamento:document.getElementById('cPag').value})}); if(confirm('Compra '+d.total+' MT\nVer recibo?')) window.open('/api/recibo/compra/'+d.compra_id,'_blank'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addEnc(){ try{ await api('/api/encomendas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente:document.getElementById('eCliente').value,telefone:document.getElementById('eTel').value,tipo:document.getElementById('eTipo').value,data_entrega:document.getElementById('eData').value,preco:parseFloat(document.getElementById('ePreco').value)||0,sinal:document.getElementById('eSinal').value,obs:document.getElementById('eObs').value})}); alert('Encomenda!'); carregarDados(); }catch(e){ alert(e.message); } }
-async function entregarEnc(id){ await api('/api/encomendas/'+id+'/entregar',{method:'POST'}); carregarDados(); }
-async function carregarPainelAdmin(){ if(!me?.is_admin) return; try{ let p=await api('/api/admin/painel'); let r=p.resumo; document.getElementById('adminResumo').innerHTML='<div class="admin-box"><h3>Visão do Dono — Jequessene</h3><div style="font-size:26px;font-weight:800">Lucro Líquido: '+r.lucro_liquido_final+' MT</div><p>Vendas '+r.total_vendas+' MT • Compras '+r.total_compras+' MT • Despesas '+r.total_despesas+' MT<br>Dívidas '+r.dividas+' MT • Vendas '+r.n_vendas+' • Compras '+r.n_compras+'</p><div class="flex"><button class="btn-y" onclick="window.open(\'/api/export/excel\',\'_blank\')">Exportar Excel</button><button onclick="window.open(\'/api/export/csv\',\'_blank\')">CSV</button><button onclick="window.open(\'/api/recibo/diario\',\'_blank\')">Recibo Diário</button><button onclick="backup()">Backup</button></div></div>'; document.getElementById('adminVendas').innerHTML='<h3>Vendas com Data e Hora</h3><table><tr><th>Data</th><th>Hora</th><th>Cliente</th><th>Vendedor</th><th>Produto</th><th>Total</th><th>Lucro</th><th>WhatsApp</th></tr>'+p.ultimas_vendas.map(v=>'<tr><td>'+v.data+'</td><td>'+v.hora+'</td><td>'+v.cliente+'</td><td>'+v.vendedor+'</td><td>'+v.produto+' x'+v.qtd+'</td><td>'+v.total+' MT</td><td>'+v.lucro+' MT</td><td>'+(v.whatsapp_link?'<a href="'+v.whatsapp_link+'" target="_blank">WhatsApp</a>':'')+'</td></tr>').join('')+'</table>'; document.getElementById('adminCompras').innerHTML='<h3>Compras com Data e Hora</h3><table><tr><th>Data</th><th>Hora</th><th>Fornecedor</th><th>Produto</th><th>Total</th><th>Quem</th></tr>'+p.ultimas_compras.map(c=>'<tr><td>'+c.data+'</td><td>'+c.hora+'</td><td>'+c.fornecedor+'</td><td>'+c.produto+' x'+c.qtd+'</td><td>'+c.total+' MT</td><td>'+c.comprado_por+'</td></tr>').join('')+'</table>'; document.getElementById('adminFluxo').innerHTML='<h3>Histórico Completo — Quem fez o quê, quando</h3>'+p.fluxo.map(l=>'<div style="padding:8px;border-bottom:1px solid #eee"><b>'+l.data+'</b> — <b>'+l.quem+'</b> ('+l.tipo+') — '+l.acao+' — '+l.detalhe+'</div>').join(''); }catch(e){ alert(e.message); } }
-async function backup(){ let b=await api('/api/backup'); let blob=new Blob([JSON.stringify(b,null,2)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup_padaria_jequessene.json'; a.click(); alert('Backup guardado!'); }
-if(token) carregarMe();
-fetch('/api/health').then(r=>r.json()).then(j=>{ let s=document.getElementById('status'); if(s) s.innerText='● '+j.app; }).catch(()=>{});
+
+async function venderProduto(id, nome){
+  const qtd = prompt('Quantos '+nome+'?', '1');
+  if(!qtd) return;
+  const cliente = prompt('Nome do cliente?', 'Cliente Balcão') || 'Cliente Balcão';
+  const pag = prompt('Pagamento? (M-Pesa / e-Mola / Dinheiro / Fiado)', 'M-Pesa') || 'M-Pesa';
+  try{
+    const d = await api('/api/vendas','POST',{produto_id: id, qtd: parseInt(qtd), cliente, pagamento: pag});
+    let msg = 'Venda feita! Total: '+d.total+' MT';
+    if(d.alerta_stock) msg += '\n\n' + d.alerta_stock;
+    alert(msg);
+    carregarProdutos();
+    carregarAlertas();
+    carregarDashboard();
+  }catch(e){ alert(e.message); }
+}
+
+// --- 4. DASHBOARD ---
+async function carregarDashboard(){
+  const el = document.getElementById('dashboard');
+  if(!el) return;
+  try{
+    const d = await api('/api/dashboard');
+    el.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="background:#fff;padding:14px;border-radius:12px;flex:1">Hoje<br><b>${d.hoje.vendas} MT</b></div>
+        <div style="background:#fff;padding:14px;border-radius:12px;flex:1">Semana<br><b>${d.semana.vendas} MT</b></div>
+        <div style="background:#fff;padding:14px;border-radius:12px;flex:1">Mês<br><b>${d.mes.vendas} MT</b></div>
+        <div style="background:#fff;padding:14px;border-radius:12px;flex:1">Dívidas<br><b style="color:red">${d.totais.dividas} MT</b></div>
+      </div>`;
+  }catch(e){}
+}
+
+// --- 5. ALERTAS DE STOCK 🔔 - ADMIN + FUNCIONARIO ---
+async function carregarAlertas(){
+  try{
+    const token = getToken();
+    if(!token) return;
+    const r = await fetch('/api/alertas', {headers:{Authorization:'Bearer '+token}});
+    const d = await r.json();
+    let sino = document.getElementById('btnSino');
+    if(!sino){
+      sino = document.createElement('div');
+      sino.id = 'btnSino';
+      sino.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;background:#fff;border:2px solid #ff9800;border-radius:50px;padding:8px 14px;font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.2)';
+      sino.onclick = function(){ const c=document.getElementById('caixaAlertas'); if(c) c.style.display = c.style.display==='none'?'block':'none'; };
+      document.body.appendChild(sino);
+      const caixa = document.createElement('div');
+      caixa.id = 'caixaAlertas';
+      caixa.style.cssText = 'position:fixed;top:60px;right:10px;z-index:9999;background:#fff3cd;border:2px solid #ff9800;padding:14px;border-radius:12px;max-width:320px;display:none';
+      document.body.appendChild(caixa);
+    }
+    const caixa = document.getElementById('caixaAlertas');
+    if(d.total > 0){
+      sino.innerHTML = '🔔 <span style="background:red;color:#fff;border-radius:50%;padding:2px 7px;font-size:13px">'+d.total+'</span>';
+      caixa.style.display = 'block';
+      caixa.innerHTML = '<b>🔔 ALERTA DE STOCK</b><br><br>' + d.mensagens.join('<br><br>') + '<br><br><button onclick="document.getElementById(\'caixaAlertas\').style.display=\'none\'" style="padding:8px 14px;border-radius:8px">Fechar</button>';
+    } else {
+      sino.innerHTML = '🔔';
+      if(caixa) caixa.style.display = 'none';
+    }
+    // Atualiza também o badge se já existir no HTML
+    const badge = document.getElementById('numAlertas');
+    if(badge){ badge.textContent = d.total; badge.style.display = d.total>0 ? 'inline' : 'none'; }
+  }catch(e){}
+}
+
+function mostrarAlertas(){
+  const c = document.getElementById('caixaAlertas');
+  if(c) c.style.display = c.style.display==='none' ? 'block' : 'none';
+}
+
+// --- 6. INICIO AUTOMATICO ---
+document.addEventListener('DOMContentLoaded', () => {
+  carregarProdutos();
+  carregarDashboard();
+  carregarAlertas();
+  setInterval(carregarAlertas, 30000);
+  setInterval(carregarProdutos, 30000);
+});
+
+// Se a página já carregou
+carregarAlertas();
+setInterval(carregarAlertas, 30000);
