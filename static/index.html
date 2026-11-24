@@ -3,135 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padaria Jequessene | Gestão Comercial</title>
+<title>Padaria Jequessene</title>
 <link rel="stylesheet" href="/static/style.css">
-<style>
-  .login-bg{background-image:url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400');background-size:cover;background-position:center;min-height:100vh;display:flex !important;align-items:center !important;justify-content:flex-end !important;padding:32px !important;position:relative}
-  .login-overlay{background:linear-gradient(90deg,rgba(43,26,14,.85) 0%,rgba(43,26,14,.30) 55%,rgba(0,0,0,.35) 100%) !important}
-  .login-left{position:relative;z-index:2;color:#fff;max-width:420px;margin-right:auto;display:none}
-  @media(min-width:900px){ .login-left{display:block} }
-  .login-left h1{font-size:44px;font-family:Georgia,serif;margin:0;line-height:1.1}
-  .login-left h1 span{color:#F5C518}
-  .login-left p{color:#FFE9B8;font-size:16px;line-height:1.5}
-  .login-card{position:relative !important;z-index:2 !important;width:400px !important;max-width:92vw !important;background:#fff !important;border-radius:24px !important;padding:28px !important;box-shadow:0 25px 60px rgba(0,0,0,.45) !important;text-align:center}
-  .login-card h1{font-size:24px !important;letter-spacing:4px !important;margin:10px 0 4px !important;color:#2B1A0E !important;font-family:Georgia,serif}
-  .login-card .sub{color:#888 !important;font-size:13px !important}
-  .login-card .sub2{color:#C98A2B !important;font-weight:700 !important;font-size:13px !important;margin:4px 0 12px !important}
-  .login-badge{background:#FFF3D6 !important;color:#7A4A12 !important;border:1px solid #F0D9A0 !important;padding:9px !important;border-radius:999px !important;font-size:12px !important;font-weight:700 !important;margin-bottom:16px !important}
-  .login-card h2{text-align:left !important;font-size:18px !important;margin:0 0 12px !important}
-  .login-card input,.login-card select{width:100% !important;padding:13px 14px !important;margin-bottom:11px !important;border:1.5px solid #EDE0C8 !important;border-radius:12px !important;font-size:14px !important}
-  .login-card .btn-dark{width:100% !important;padding:14px !important;border-radius:12px !important}
-  .pass-wrap{position:relative}
-  .pass-wrap .eye{position:absolute;right:8px;top:8px;background:#eee;border:none;padding:6px 10px;border-radius:8px;cursor:pointer}
-  .auth-tabs{display:flex;gap:8px;margin-bottom:14px}
-  .auth-tabs button{flex:1;padding:12px;border-radius:12px;border:1px solid #EDE0C8;background:#FFF8EE;font-weight:700;cursor:pointer}
-  .auth-tabs button.active{background:#2B1A0E;color:#fff}
-  .link-btn{background:none;border:none;color:#C98A2B;font-weight:700;cursor:pointer;margin-top:8px}
-  .btn-demitir{background:#c0392b;color:#fff;border:none;padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-  .btn-reativar{background:#27ae60;color:#fff;border:none;padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-  .badge-demitido{background:#c0392b;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
-  .badge-ativo{background:#27ae60;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
-  @media(max-width:700px){ .login-bg{justify-content:center !important;padding:16px !important} .login-card{width:100% !important} }
-</style>
 </head>
 <body>
-<div class="login-bg" id="loginBg">
-  <div class="login-overlay"></div>
+<div id="loginPage" class="login-page">
   <div class="login-left">
-    <h1>Padaria<br><span>Jequessene</span></h1>
-    <p>🥐 Pão fresco todos os dias.<br>Feito com amor em Matola, Moçambique.</p>
-    <p style="font-size:13px;background:rgba(255,255,255,.15);padding:10px 14px;border-radius:12px;display:inline-block">⭐ M-Pesa • e-Mola • WhatsApp • Recibos PDF • Dívidas</p>
+    <img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400">
+    <div class="shade"></div>
+    <div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola. Gestão simples para vender mais e perder menos.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div>
   </div>
-  <div class="login-card">
-    <img src="/static/logo.png" style="width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid #F5C518" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'">
-    <div id="logoFallback" style="display:none;width:84px;height:84px;border-radius:50%;background:#C98A2B;color:#fff;font-size:36px;align-items:center;justify-content:center;margin:0 auto;font-family:Georgia,serif">J</div>
-    <h1>PADARIA</h1>
-    <p class="sub">Gestão Comercial • Matola - Moçambique</p>
-    <p class="sub2" id="dataHoje"></p>
-    <div class="login-badge">🥐 M-Pesa • e-Mola • WhatsApp • Recibos PDF</div>
-    <div id="authSec">
-      <div class="auth-tabs">
-        <button id="tabLogin" class="active" type="button" onclick="mostrarLogin()">Entrar</button>
-        <button id="tabRegisto" type="button" onclick="mostrarRegisto()">Criar Conta</button>
-      </div>
-      <div id="formLogin">
-        <h2>Entrar no Sistema</h2>
-        <input id="loginTel" placeholder="Teu telefone - ex: 840000000" inputmode="numeric">
-        <div class="pass-wrap"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" class="eye" onclick="mostrarSenha('loginSenha', this)">Ver</button></div>
-        <button class="btn-dark" onclick="login()">Entrar →</button>
-      </div>
-      <div id="formRegistar" class="hidden">
-        <h2>Criar Conta Nova</h2>
-        <input id="rNome" placeholder="Nome completo">
-        <input id="rTel" placeholder="Telefone - ex: 841234567" inputmode="numeric">
-        <input id="rIdade" type="number" placeholder="Idade - ex: 18">
-        <input id="rEmail" type="email" placeholder="Email">
-        <label class="label">Foto</label>
-        <input type="file" accept="image/*" onchange="lerFoto(event,'fotoPrev')">
-        <img id="fotoPrev" class="foto-prev">
-        <select id="rPais"><option>Moçambique</option><option>Angola</option><option>Brasil</option><option>Portugal</option><option>Outro</option></select>
-        <input id="rBairro" placeholder="Bairro - ex: Matola">
-        <select id="rTipo"><option>Cliente</option><option>Funcionário</option></select>
-        <div class="pass-wrap"><input id="rSenha" type="password" placeholder="Cria senha"><button type="button" class="eye" onclick="mostrarSenha('rSenha', this)">Ver</button></div>
-        <button class="btn-p" onclick="registar()">Criar Conta</button>
-        <br><button type="button" class="link-btn" onclick="mostrarLogin()">Já tenho conta? Entrar →</button>
-      </div>
-      <p id="authMsg"></p>
-    </div>
-  </div>
+  <div class="login-right"><div class="login-box">
+    <div class="login-logo">J</div><h2>PADARIA</h2><p class="sub">Gestão Comercial • Matola, Moçambique</p><p class="date" id="dataHoje"></p>
+    <div class="tabs2"><button id="tabLogin" class="on" onclick="mostrarLogin()">Entrar</button><button id="tabRegisto" onclick="mostrarRegisto()">Criar conta</button></div>
+    <div id="formLogin"><input id="loginTel" placeholder="Teu telefone • ex: 840000000" inputmode="numeric"><div class="pass"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" onclick="mostrarSenha('loginSenha',this)">Ver</button></div><button class="btn-main" onclick="login()">Entrar</button><p class="msg" id="authMsg"></p></div>
+    <div id="formRegistar" class="hidden"><input id="rNome" placeholder="Nome completo"><input id="rTel" placeholder="Telefone • ex: 841234567" inputmode="numeric"><input id="rIdade" type="number" placeholder="Idade"><input id="rEmail" type="email" placeholder="Email (opcional)"><input id="rBairro" placeholder="Bairro • ex: Matola"><select id="rTipo"><option>Cliente</option><option>Funcionário</option></select><div class="pass"><input id="rSenha" type="password" placeholder="Cria uma senha"><button type="button" onclick="mostrarSenha('rSenha',this)">Ver</button></div><button class="btn-gold" onclick="registar()">Criar conta</button><p class="msg" id="authMsg2"></p></div>
+    <p style="text-align:center;color:#8A7A68;font-size:12px;margin-top:14px">Ao entrar aceitas as regras da Padaria Jequessene.</p>
+  </div></div>
 </div>
-
+<div id="welcome" class="welcome hidden"><div><img id="welcomeFoto" src=""><h1 id="welcomeNome">Bem-vindo!</h1><p id="welcomeTexto">Bom trabalho hoje.</p><br><button onclick="entrarSistema()">Entrar no sistema →</button></div></div>
 <div id="app" class="hidden">
-  <header class="topbar"><div class="brand"><img src="/static/logo.png" class="brand-logo-img" onerror="this.style.display='none'"><div><h1>Padaria <span>Jequessene</span></h1><p>Gestão Comercial | Matola • <span id="dataTop"></span></p></div></div><span id="status" class="status">● Online</span></header>
-  <main class="wrap">
-    <div class="banner"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200"><div><h2>🥐 Pão Fresco, Todos os Dias</h2><p>Matola • Moçambique • Qualidade Jequessene</p></div></div>
-    <div class="layout">
-      <aside class="sidebar">
-        <div class="user-mini"><img id="meuAvatar" class="avatar-lg" src="" style="width:48px;height:48px"><div><b id="saudacao">Olá</b><br><small id="infoUser" class="muted"></small></div></div>
-        <p id="avisoPerm" class="warn" style="display:none"></p>
-        <h3>Menu</h3>
-        <button class="ativo" onclick="mostrar('dashSec');ativarMenu(this)">📊 <span>Dashboard</span></button>
-        <button onclick="mostrar('pessoasSec');ativarMenu(this)">👥 <span>Pessoas</span></button>
-        <button onclick="mostrar('produtosSec');ativarMenu(this)">🥖 <span>Produtos</span></button>
-        <button onclick="mostrar('vendasSec');ativarMenu(this)">💰 <span>Vender</span></button>
-        <button onclick="mostrar('stockSec');ativarMenu(this)">📦 <span>Stock</span></button>
-        <button onclick="mostrar('fornecedorSec');ativarMenu(this)">🚚 <span>Fornecedor</span></button>
-        <button onclick="mostrar('encomendasSec');ativarMenu(this)">🎂 <span>Encomendas</span></button>
-        <button onclick="mostrar('dividasSec');ativarMenu(this)">⚠️ <span>Dívidas</span></button>
-        <button onclick="mostrar('adminSec');ativarMenu(this)">👑 <span>Admin</span></button>
-        <div style="margin-top:14px;border-top:1px solid #eee;padding-top:12px">
-          <button id="btnVoltarAdmin" onclick="voltarAdmin()" style="display:none">↩️ Voltar para Admin</button>
-          <button onclick="abrirTroca()">🔄 Trocar de Conta</button>
-          <button onclick="window.open('/api/recibo/diario','_blank')">🧾 Fecho do Dia</button>
-          <button onclick="sair()" style="color:#c0392b">🚪 Sair</button>
-        </div>
-      </aside>
-      <div class="conteudo">
-        <div class="kpis"><div class="kpi kpi-green"><span>💰 Vendas Totais</span><b id="tVendas">0 MT</b><small>Semana atual</small></div><div class="kpi kpi-dark"><span>📈 Lucro Líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>👥 Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi kpi-red"><span>⚠️ Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div>
-        <div id="dashSec" class="card"><h2>📊 Dashboard - Últimos 7 dias</h2><div class="chart-bar" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div><h2 class="mt">🔥 Produtos Mais Vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex mt"><button class="btn-dark" onclick="window.open('/api/recibo/diario','_blank')">🧾 Recibo Diário PDF</button><button onclick="window.open('/api/export/excel','_blank')">📊 Exportar Excel</button><button class="btn-y" onclick="window.open('/api/export/csv','_blank')">📄 Exportar CSV</button></div><div class="flex"><div class="card flex1"><h3>Mais Vendidos</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por Pagamento</h3><div id="porPag"></div></div></div><div class="kpis" id="dashHoje"></div></div>
-        <div id="pessoasSec" class="card hidden"><h2>👥 1. Gestão de Pessoas</h2><p class="muted">Nome, telefone, idade, email, foto, país / bairro. Só Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
-        <div id="produtosSec" class="card hidden"><h2>🥖 2. Gestão de Produtos</h2><p class="muted">Lógica: <b>Lucro = Preço - Custo</b>. Quando vendes, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="🔍 Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar Produto</h3><input id="pNome" placeholder="Nome - ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de Venda MT"><input id="pCusto" type="number" placeholder="Custo MT - ex: 400"><input id="pStock" type="number" placeholder="Stock inicial"><label class="label">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn-g" id="btnSalvarProd" onclick="salvarProd()">Adicionar Produto</button><div id="listaProd"></div></div>
-        <div id="vendasSec" class="card hidden"><h2>💰 3. Financeiro - Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente - ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><label class="label">Quando vai pagar? (se for dívida)</label><input id="vDataPag" type="date"><button class="btn-g" onclick="addVenda()">Vender e Gerar Recibo PDF</button><h3>Saída / Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn-o" onclick="addDespesa()">Registar Saída</button><h3>Histórico de Vendas</h3><div id="listaVendas"></div><h3>Despesas</h3><div id="listaDespesas"></div></div>
-        <div id="stockSec" class="card hidden"><h2>📦 4. Gestão de Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
-        <div id="fornecedorSec" class="card hidden"><h2>🚚 Fornecedores + Compras</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende - ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local - ex: Matola"><button class="btn-y" onclick="addForn()">Adicionar Fornecedor</button><div id="listaForn"></div><h3>Registar Compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto - ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn-g" onclick="addCompra()">Registar Compra + Recibo</button><h3>Histórico de Compras</h3><div id="listaCompras"></div></div>
-        <div id="encomendasSec" class="card hidden"><h2>🎂 Encomendas</h2><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option>Bolo de Aniversário</option><option>Bolo de Casamento</option><option>Bolo de Chocolate</option><option>Pastéis (Caixa 12)</option><option>Doces Festa</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn-y" onclick="addEnc()">Registar Encomenda</button><div id="listaEnc"></div></div>
-        <div id="dividasSec" class="card hidden"><h2>⚠️ Dívidas - Quem deve, quanto deve, quando paga</h2><div id="listaDividas"></div></div>
-        <div id="adminSec" class="card hidden"><h2>👑 Painel do Administrador - Só Jequessene</h2><p class="muted">Recibos de tudo, história de compra e venda, e quem editou o quê.</p><div class="flex"><button class="btn-p" onclick="carregarPainelAdmin()">Atualizar Painel</button><button class="btn-y" onclick="abrirTroca()">Trocar de Conta</button><button onclick="backup()">Backup</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
+  <header class="topbar"><div class="brand"><div class="brand-logo">J</div><div><b>Padaria Jequessene</b><small>Matola • <span id="dataTop"></span></small></div></div><div class="top-actions"><button class="btn" onclick="toggleMenu()">Menu</button><img id="meuAvatar" class="avatar-top" src="" onclick="abrirPerfil()" title="Meu perfil - trocar foto"><button class="btn btn-dark" onclick="abrirPerfil()">Meu perfil</button><button class="btn" onclick="sair()">Sair</button></div></header>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="perfil"><img id="sideFoto" src=""><div><b id="saudacao">Olá</b><br><small id="infoUser" style="color:#CFC3AE"></small></div></div>
+      <p id="avisoPerm" class="danger hidden"></p>
+      <h4>Operação</h4>
+      <div id="menuOperacao">
+        <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)">Dashboard</button>
+        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">Vender</button>
+        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">Comprar / Fornecedor</button>
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">Encomendas</button>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">Produtos</button>
+        <button data-sec="stockSec" onclick="mostrarSec('stockSec',this)">Stock</button>
+        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">Dívidas</button>
       </div>
-    </div>
-  </main>
-  <footer class="footer">Padaria Jequessene • Matola, Moçambique • Feito com amor • © 2026</footer>
+      <h4 id="tituloGestao">Gestão</h4>
+      <div id="menuGestao"><button data-sec="pessoasSec" onclick="mostrarSec('pessoasSec',this)">Pessoas</button><button data-sec="adminSec" onclick="mostrarSec('adminSec',this)">Painel Admin</button></div>
+      <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
+    </aside>
+    <main class="main">
+      <div id="dashSec"><div class="kpis"><div class="kpi"><span>Vendas • Semana</span><b id="tVendas">0 MT</b><small>Últimos 7 dias</small></div><div class="kpi"><span>Lucro líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi"><span>Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div><div class="card"><h2>Resumo da semana</h2><div class="chart" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div><div class="flex" style="margin-top:14px"><button class="btn btn-dark" onclick="window.open('/api/recibo/diario','_blank')">Fecho do dia</button><button class="btn" onclick="window.open('/api/export/excel','_blank')">Exportar Excel</button></div></div><div class="card"><h2>Mais vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex"><div class="card flex1"><h3>Lista</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por pagamento</h3><div id="porPag"></div></div></div><div id="dashHoje"></div></div></div>
+      <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar. Funcionário demitido perde o acesso na hora.</p><div id="listaPessoas"></div></div>
+      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Lucro = Preço - Custo. Ao vender, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div>
+      <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
+      <div id="stockSec" class="card hidden"><h2>Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
+      <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
+      <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option>Bolo de Aniversário</option><option>Bolo de Casamento</option><option>Bolo de Chocolate</option><option>Pastéis (Caixa 12)</option><option>Doces Festa</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><div id="listaEnc"></div></div>
+      <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
+      <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene. Aqui está a história completa: vendas, compras e quem fez o quê.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
+      <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
+    </main>
+  </div>
+  <footer class="footer">Padaria Jequessene • Matola • © 2026</footer>
 </div>
-<div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de Conta - Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button onclick="trocarConta()">Entrar nessa conta</button><button onclick="fecharTroca()" style="background:#888;color:#fff">Cancelar</button></div></div></div>
-<nav id="barra" class="hidden"><button onclick="mostrar('vendasSec')">Vender</button><button onclick="mostrar('produtosSec')">Produtos</button><button onclick="mostrar('fornecedorSec')">Fornecedor</button><button onclick="mostrar('encomendasSec')">Encomendas</button><button onclick="mostrar('adminSec')">Admin</button></nav>
+<div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto • podes trocar quantas vezes quiseres</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
+<div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
 <script src="/static/app.js"></script>
 <script>
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
 document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
-function mostrarSenha(id, btn){ var el=document.getElementById(id); if(el.type==='password'){el.type='text';btn.innerText='Esconder';} else {el.type='password';btn.innerText='Ver';} }
-function mostrarLogin(){ document.getElementById('formLogin').classList.remove('hidden'); document.getElementById('formRegistar').classList.add('hidden'); document.getElementById('tabLogin').classList.add('active'); document.getElementById('tabRegisto').classList.remove('active'); }
-function mostrarRegisto(){ document.getElementById('formLogin').classList.add('hidden'); document.getElementById('formRegistar').classList.remove('hidden'); document.getElementById('tabLogin').classList.remove('active'); document.getElementById('tabRegisto').classList.add('active'); }
-function ativarMenu(btn){ document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); }
+function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='password'){el.type='text';btn.innerText='Esconder'}else{el.type='password';btn.innerText='Ver'}}
+function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
+function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
 </script>
 </body>
 </html>
