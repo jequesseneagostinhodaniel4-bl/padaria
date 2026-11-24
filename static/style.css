@@ -97,6 +97,14 @@ button{font-family:inherit}
 .badge-ok{background:#1E7A46;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
 .badge-off{background:#C0392B;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
 .footer{text-align:center;color:#A99A85;font-size:12px;padding:18px}
+/* ===== DASHBOARD NOVO - IGUAL A FOTO ===== */
+.dash-card{background:#fff;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+.dash-card-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;font-weight:600}
+.dash-card h1 small{font-size:16px;font-weight:700}
+.mini-box{flex:1;background:#FFFBF2;border:1px solid #F5EEDD;border-radius:14px;padding:12px}
+.dash-grid-top{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px}
+.dash-grid-bottom{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:14px}
+@media(max-width:900px){ .dash-grid-top,.dash-grid-bottom{grid-template-columns:1fr !important} }
 /* ===== TEMA PRETO / BRANCO - COMPLETO ===== */
 .btn-tema{background:#111 !important;color:#fff !important;border:none !important;padding:9px 14px !important;border-radius:999px !important;font-weight:700 !important;cursor:pointer !important;font-size:13px !important;white-space:nowrap}
 html.tema-preto, body.tema-preto{background:#0F1115 !important;color:#F3F4F6 !important}
@@ -140,3 +148,7 @@ body.tema-preto .footer{color:#888 !important}
 body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 body.tema-preto #graficoLabels{color:#fff !important}
 body.tema-preto #graficoProf{border-bottom-color:#333 !important}
+body.tema-preto .dash-card{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important;box-shadow:none !important}
+body.tema-preto .dash-card-top{color:#9CA3AF !important}
+body.tema-preto .dash-card h1{color:#fff !important}
+body.tema-preto .mini-box{background:#0F1115 !important;border-color:#333 !important;color:#fff !important}
