@@ -96,8 +96,8 @@ async function carregarDados(){
   }catch(e){}
   try{
     const fin=await api('/api/financeiro');
-    if(isAdmin){ document.getElementById('listaVendas').innerHTML=fin.vendas.slice(0,30).map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.cliente}</div>`).join(''); document.getElementById('listaDespesas').innerHTML=fin.despesas.map(d=>`<div class="linha">${d.descricao} - ${d.valor} MT</div>`).join(''); }
-    document.getElementById('listaCompras').innerHTML=fin.compras.map(c=>`<div class="linha">${c.produto} x${c.qtd} = ${c.total} MT - ${c.fornecedor}</div>`).join('');
+    if(isAdmin){ document.getElementById('listaVendas').innerHTML=fin.vendas.slice(0,30).map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.cliente} <button class="btn" onclick="baixarReciboVenda(${v.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('listaDespesas').innerHTML=fin.despesas.map(d=>`<div class="linha">${d.descricao} - ${d.valor} MT</div>`).join(''); }
+    document.getElementById('listaCompras').innerHTML=fin.compras.map(c=>`<div class="linha">${c.produto} x${c.qtd} = ${c.total} MT - ${c.fornecedor} <button class="btn" onclick="baixarReciboCompra(${c.id})">🧾 Recibo</button></div>`).join('');
     document.getElementById('listaDividas').innerHTML=fin.dividas.map(d=>`<div class="linha"><b>${d.cliente}</b> deve ${d.total} MT - ${d.produto} ${d.whatsapp_link?`<a href="${d.whatsapp_link}" target="_blank">WhatsApp</a>`:''} <button class="btn btn-green" onclick="pagarDivida(${d.id},'${esc(d.cliente)}')">Marcar pago</button></div>`).join('')||'Sem dívidas';
   }catch(e){}
   try{ const forn=await api('/api/fornecedores'); document.getElementById('listaForn').innerHTML=forn.map(f=>`<div class="linha"><b>${f.nome}</b> - ${f.produto} - ${f.preco} MT - ${f.telefone}</div>`).join(''); document.getElementById('cForn').innerHTML=forn.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); }catch(e){}
@@ -107,15 +107,83 @@ async function venderRapido(id){ document.getElementById('vProd').value=id; most
 async function salvarProd(){ const body={nome:val('pNome'),categoria:val('pCat'),preco:parseFloat(val('pPreco')||0),custo:parseFloat(val('pCusto')||0),stock:parseInt(val('pStock')||0),stock_minimo:5,foto:FOTO_TEMP}; if(!body.nome) return alert('Escreve nome'); try{ if(EDIT_ID) await api('/api/products/'+EDIT_ID,'PUT',body); else await api('/api/products','POST',body); EDIT_ID=null; FOTO_TEMP=''; document.getElementById('btnSalvarProd').innerText='Adicionar produto'; toast('Guardado'); carregarDados(); }catch(e){ alert(e.message); } }
 function editarProd(id){ const p=PRODS.find(x=>x.id===id); if(!p) return; EDIT_ID=id; document.getElementById('pNome').value=p.nome; document.getElementById('pCat').value=p.categoria; document.getElementById('pPreco').value=p.preco; document.getElementById('pCusto').value=p.custo; document.getElementById('pStock').value=p.stock; document.getElementById('btnSalvarProd').innerText='Guardar edição'; mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); }
 async function apagarProd(id){ if(!confirm('Apagar?')) return; try{ await api('/api/products/'+id,'DELETE'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addVenda(){ try{ const d=await api('/api/vendas','POST',{produto_id:parseInt(val('vProd')),qtd:parseInt(val('vQtd')||1),cliente:val('vCliente')||'Cliente Balcão',cliente_tel:val('vTel'),pagamento:val('vPag'),data_pagamento:val('vDataPag')}); toast('Venda feita • '+d.total+' MT'); if(d.whatsapp_link) window.open(d.whatsapp_link,'_blank'); carregarDados(); }catch(e){ alert(e.message); } }
+
+// ===== CORRIGIDO: VENDA AGORA BAIXA RECIBO AUTOMATICAMENTE =====
+async function addVenda(){
+  try{
+    const d=await api('/api/vendas','POST',{produto_id:parseInt(val('vProd')),qtd:parseInt(val('vQtd')||1),cliente:val('vCliente')||'Cliente Balcão',cliente_tel:val('vTel'),pagamento:val('vPag'),data_pagamento:val('vDataPag')});
+    toast('Venda feita • '+d.total+' MT');
+    // Pergunta se quer recibo e baixa direto, sem window.open
+    if(confirm('Venda feita • '+d.total+' MT\nQueres baixar o recibo PDF?')){
+      baixarReciboVenda(d.venda_id);
+    }
+    if(d.whatsapp_link) window.open(d.whatsapp_link,'_blank');
+    carregarDados();
+  }catch(e){ alert(e.message); }
+}
 async function addDespesa(){ try{ await api('/api/despesas','POST',{descricao:val('sDesc'),valor:parseFloat(val('sValor')||0),categoria:val('sCat')}); toast('Despesa registada'); carregarDados(); }catch(e){ alert(e.message); } }
 async function addForn(){ try{ await api('/api/fornecedores','POST',{nome:val('fNome'),telefone:val('fTel'),produto:val('fProd'),preco:parseFloat(val('fPreco')||0),localizacao:val('fLocal')}); toast('Fornecedor adicionado'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addCompra(){ try{ const d=await api('/api/compras','POST',{fornecedor_id:parseInt(val('cForn')),produto:val('cProd'),qtd:parseInt(val('cQtd')||1),preco_unitario:parseFloat(val('cPreco')||0),pagamento:val('cPag')}); toast('Compra registada • '+d.total+' MT'); carregarDados(); }catch(e){ alert(e.message); } }
+
+// ===== CORRIGIDO: COMPRA AGORA PERGUNTA RECIBO =====
+async function addCompra(){
+  try{
+    const d=await api('/api/compras','POST',{fornecedor_id:parseInt(val('cForn')),produto:val('cProd'),qtd:parseInt(val('cQtd')||1),preco_unitario:parseFloat(val('cPreco')||0),pagamento:val('cPag')});
+    toast('Compra registada • '+d.total+' MT');
+    if(confirm('Compra registada • '+d.total+' MT\nQueres baixar o recibo da compra?')){
+      baixarReciboCompra(d.compra_id);
+    }
+    carregarDados();
+  }catch(e){ alert(e.message); }
+}
 async function addEnc(){ try{ await api('/api/encomendas','POST',{cliente:val('eCliente'),telefone:val('eTel'),tipo:val('eTipo'),data_entrega:val('eData'),preco:parseFloat(val('ePreco')||0),sinal:val('eSinal'),obs:val('eObs')}); toast('Encomenda registada'); carregarDados(); }catch(e){ alert(e.message); } }
 async function entregarEnc(id){ try{ await api('/api/encomendas/'+id+'/entregar','POST',{}); carregarDados(); }catch(e){ alert(e.message); } }
-async function carregarPainelAdmin(){ try{ const d=await api('/api/admin/painel'); document.getElementById('adminResumo').innerHTML=`<p>Vendas: ${d.resumo.total_vendas} MT • Lucro líquido: ${d.resumo.lucro_liquido_final} MT • Dívidas: ${d.resumo.dividas} MT</p>`; document.getElementById('adminVendas').innerHTML='<h3>Últimas vendas</h3>'+d.ultimas_vendas.map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.vendedor}</div>`).join(''); document.getElementById('adminCompras').innerHTML='<h3>Últimas compras</h3>'+d.ultimas_compras.map(c=>`<div class="linha">${c.data} - ${c.produto} x${c.qtd} = ${c.total} MT</div>`).join(''); document.getElementById('adminFluxo').innerHTML='<h3>Quem fez o quê</h3>'+d.fluxo.map(l=>`<div class="linha">${l.data} - ${l.quem} - ${l.acao} - ${l.detalhe}</div>`).join(''); }catch(e){ alert(e.message); } }
+async function carregarPainelAdmin(){ try{ const d=await api('/api/admin/painel'); document.getElementById('adminResumo').innerHTML=`<p>Vendas: ${d.resumo.total_vendas} MT • Lucro líquido: ${d.resumo.lucro_liquido_final} MT • Dívidas: ${d.resumo.dividas} MT</p>`; document.getElementById('adminVendas').innerHTML='<h3>Últimas vendas</h3>'+d.ultimas_vendas.map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.vendedor} <button class="btn" onclick="baixarReciboVenda(${v.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminCompras').innerHTML='<h3>Últimas compras</h3>'+d.ultimas_compras.map(c=>`<div class="linha">${c.data} - ${c.produto} x${c.qtd} = ${c.total} MT <button class="btn" onclick="baixarReciboCompra(${c.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminFluxo').innerHTML='<h3>Quem fez o quê</h3>'+d.fluxo.map(l=>`<div class="linha">${l.data} - ${l.quem} - ${l.acao} - ${l.detalhe}</div>`).join(''); }catch(e){ alert(e.message); } }
 async function backup(){ try{ const d=await api('/api/backup'); const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup_padaria.json'; a.click(); }catch(e){ alert(e.message); } }
 function abrirTroca(){ document.getElementById('modalTroca').classList.remove('hidden'); }
 function fecharTroca(){ document.getElementById('modalTroca').classList.add('hidden'); }
 async function trocarConta(){ try{ const d=await api('/api/admin/switch','POST',{target_telefone:val('trocaTel'),admin_password:val('trocaSenha')}); localStorage.setItem('adminToken',token); token=d.token; localStorage.setItem('token',token); location.reload(); }catch(e){ alert(e.message); } }
+
+// ===== NOVO: FECHO DO DIA + EXPORT EXCEL + RECIBOS - SEM Not authenticated =====
+// Usa fetch com token, nunca window.open. É isto que resolve o teu erro.
+async function baixarComToken(url, nomeFicheiro){
+  if(!token){ alert('Faz login de novo'); return; }
+  const sep = url.includes('?') ? '&' : '?';
+  const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: { 'Authorization': 'Bearer ' + token } });
+  if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
+  if(!res.ok){ alert('Erro ao baixar: ' + res.status); return; }
+  const blob = await res.blob();
+  const u = window.URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro;
+  document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
+  toast('✅ Baixado: ' + nomeFicheiro);
+}
+async function fechoDia(){
+  if(!token){ alert('Faz login de novo'); return; }
+  try{
+    const res = await fetch('/api/recibo/diario/json?token=' + encodeURIComponent(token), { headers: { 'Authorization': 'Bearer ' + token } });
+    if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
+    if(!res.ok){ alert('Erro fecho: ' + res.status); return; }
+    const r = await res.json();
+    let modal = document.getElementById('modalFecho');
+    if(!modal){ modal = document.createElement('div'); modal.id='modalFecho'; modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(modal); }
+    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px;border-radius:16px;font-family:Arial">
+      <div style="text-align:center"><h2>🍞 PADARIA JEQUESSENE</h2><p>Fecho do Dia - ${r.data}</p><hr style="border:1px dashed #ccc;margin:12px 0"></div>
+      <p>Vendas Hoje: <b>${r.vendas_qtd} - ${r.vendas_total} MT</b></p>
+      <p>Compras Hoje: <b>${r.compras_total} MT</b></p>
+      <p>Despesas Hoje: <b>${r.despesas_total} MT</b></p>
+      <p>M-Pesa: ${r.mpesa} MT | e-Mola: ${r.emola} MT | Dinheiro: ${r.dinheiro} MT</p>
+      <h2 style="margin:12px 0">LUCRO LÍQUIDO: ${r.lucro_liquido} MT</h2>
+      <hr style="border:1px dashed #ccc;margin:12px 0">
+      <b>Vendas:</b><br>${r.vendas.map(v=>`${v.produto} x${v.qtd} - ${v.total} MT (${v.pagamento})`).join('<br>') || 'Sem vendas'}
+      <br><br><b>Compras:</b><br>${r.compras.map(c=>`${c.produto} x${c.qtd} - ${c.total} MT (${c.fornecedor})`).join('<br>') || 'Sem compras'}
+      <div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div>
+    </div>`;
+    modal.style.display='flex';
+  }catch(e){ alert('Erro fecho: ' + e.message); }
+}
+function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessene.xlsx'); toast('A exportar Excel...'); }
+function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); toast('A exportar CSV...'); }
+function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
+function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
+
 if(token){ carregarDados(); }
