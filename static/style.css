@@ -45,7 +45,7 @@ input,select{width:100%;padding:12px;border:1px solid #E3D9C8;border-radius:12px
 .layout{display:flex;min-height:calc(100vh - 62px)}
 .sidebar{width:250px;background:#1F150C;color:#fff;padding:16px;flex-shrink:0}
 .sidebar h4{color:#E8B84B;font-size:12px;letter-spacing:1px;margin:18px 0 8px}
-.sidebar button{display:block;width:100%;text-align:left;background:transparent;color:#EDE3D3```css
+.sidebar button{display:block;width:100%;text-align:left;background:transparent;color:#EDE3D3;border:none;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px}
 .sidebar button.on,.sidebar button:hover{background:#E8B84B;color:#111;font-weight:700}
 .sidebar button.sair{color:#FF8A7A}
 .perfil{display:flex;gap:10px;align-items:center;background:#2A1D10;padding:10px;border-radius:12px}
@@ -92,3 +92,8 @@ body.tema-preto .tabs2{background:#222!important}
 #quemComprouGrid > div{ background:#FFFBF2!important; color:#111!important; }
 #quemComprouGrid b{ color:#111!important; }
 #quemComprouGrid small{ color:#555!important; }
+#graficoProf span{ font-size:12px!important; font-weight:800!important; }
+body:not(.tema-preto) #graficoProf span{ color:#111!important; }
+body.tema-preto #graficoProf span{ color:#fff!important; }
+body:not(.tema-preto) #graficoLabels span{ color:#111!important; }
+body.tema-preto #graficoLabels span{ color:#fff!important; }
