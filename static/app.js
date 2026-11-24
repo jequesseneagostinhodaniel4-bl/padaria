@@ -45,6 +45,35 @@ async function salvarPerfil(){
   try{ const d=await api('/api/me','PUT',{nome:val('perfilNome'),bairro:val('perfilBairro'),email:val('perfilEmail'),foto:FOTO_PERFIL}); toast('Perfil atualizado!'); fecharPerfil(); if(FOTO_PERFIL) ME.foto=FOTO_PERFIL; carregarDados(); }catch(e){ alert(e.message); }
 }
 async function mudarSenha(){ try{ await api('/api/me/senha','POST',{antiga:val('senhaAntiga'),nova:val('senhaNova')}); toast('Senha trocada!'); }catch(e){ alert(e.message); } }
+
+// ===== GRÁFICO NOVO - IGUAL À FOTO - NÃO COLA MAIS =====
+function desenharGraficoProf(dados){
+  const box = document.getElementById('graficoProf');
+  const labels = document.getElementById('graficoLabels');
+  const txt = document.getElementById('resumoSemanaTxt');
+  const semanaEl = document.getElementById('semanaTxt');
+  if(!box || !dados || !dados.length) return;
+  const maxV = Math.max(...dados.map(g=>g.vendas||0), 100);
+  const total = dados.reduce((s,g)=>s+(g.vendas||0),0);
+  const hojeV = dados[dados.length-1]?.vendas || 0;
+  const melhor = Math.max(...dados.map(g=>g.vendas||0));
+  if(txt) txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`;
+  if(semanaEl) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
+  box.innerHTML = dados.map((g,i)=>{
+    const v = g.vendas || 0;
+    const isHoje = i === dados.length - 1;
+    const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155));
+    const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B';
+    return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%">
+      <span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span>
+      <div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div>
+    </div>`;
+  }).join('');
+  if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center">${g.label}</span>`).join('');
+  const avatar = document.getElementById('dashAvatar');
+  if(avatar && ME?.foto) avatar.src = ME.foto;
+}
+
 async function carregarDados(){
   if(!token) return;
   try{ ME=await api('/api/me'); }catch(e){ localStorage.removeItem('token'); token=''; location.reload(); return; }
@@ -66,17 +95,18 @@ async function carregarDados(){
   else { mostrarSec('dashSec', document.querySelector('[data-sec="dashSec"]')); }
   try{
     const dash=await api('/api/dashboard');
-    document.getElementById('tVendas').innerText=dash.semana.vendas+' MT';
-    document.getElementById('tLucro').innerText=dash.semana.lucro+' MT';
-    document.getElementById('tClientes').innerText=dash.totais.clientes;
-    document.getElementById('tDividas').innerText=dash.totais.dividas+' MT';
-    document.getElementById('grafico').innerHTML=dash.grafico.map(g=>`<div class="bar" style="height:${Math.max(5,Math.min(100,g.vendas/50))}px"></div>`).join('');
-    document.getElementById('graficoLabels').innerHTML=dash.grafico.map(g=>`<span>${g.label}</span>`).join('');
+    // ===== DASHBOARD NOVO - IGUAL À FOTO =====
+    const elV = document.getElementById('tVendas'); if(elV) elV.innerHTML = dash.semana.vendas + ' <small>MT</small>';
+    const elL = document.getElementById('tLucro'); if(elL) elL.innerHTML = dash.semana.lucro + ' <small>MT</small>';
+    const elC = document.getElementById('tClientes'); if(elC) elC.innerText = dash.totais.clientes;
+    const elD = document.getElementById('tDividas'); if(elD) elD.innerHTML = dash.totais.dividas + ' <small>MT</small>';
+    // CORRIGIDO: usa graficoProf, não o grafico velho
+    desenharGraficoProf(dash.grafico);
     document.getElementById('maisVendidos').innerHTML=dash.mais_vendidos.map(m=>`<p>${m.produto} - ${m.qtd}</p>`).join('')||'Ainda sem vendas';
     document.getElementById('maisVendidosGrid').innerHTML=dash.mais_vendidos.map(m=>`<div class="prod-card"><b>${m.produto}</b><p>${m.qtd} vendidos</p></div>`).join('');
     document.getElementById('porPag').innerHTML=Object.entries(dash.por_pagamento).map(([k,v])=>`<p>${k}: ${v} MT</p>`).join('');
     document.getElementById('dashHoje').innerHTML=`<p>Hoje: ${dash.hoje.vendas} MT • Mês: ${dash.mes.vendas} MT</p>`;
-  }catch(e){}
+  }catch(e){ console.log('dash erro', e); }
   try{
     PRODS=await api('/api/products');
     const q=val('pesquisaProd').toLowerCase();
@@ -107,31 +137,22 @@ async function venderRapido(id){ document.getElementById('vProd').value=id; most
 async function salvarProd(){ const body={nome:val('pNome'),categoria:val('pCat'),preco:parseFloat(val('pPreco')||0),custo:parseFloat(val('pCusto')||0),stock:parseInt(val('pStock')||0),stock_minimo:5,foto:FOTO_TEMP}; if(!body.nome) return alert('Escreve nome'); try{ if(EDIT_ID) await api('/api/products/'+EDIT_ID,'PUT',body); else await api('/api/products','POST',body); EDIT_ID=null; FOTO_TEMP=''; document.getElementById('btnSalvarProd').innerText='Adicionar produto'; toast('Guardado'); carregarDados(); }catch(e){ alert(e.message); } }
 function editarProd(id){ const p=PRODS.find(x=>x.id===id); if(!p) return; EDIT_ID=id; document.getElementById('pNome').value=p.nome; document.getElementById('pCat').value=p.categoria; document.getElementById('pPreco').value=p.preco; document.getElementById('pCusto').value=p.custo; document.getElementById('pStock').value=p.stock; document.getElementById('btnSalvarProd').innerText='Guardar edição'; mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); }
 async function apagarProd(id){ if(!confirm('Apagar?')) return; try{ await api('/api/products/'+id,'DELETE'); carregarDados(); }catch(e){ alert(e.message); } }
-
-// ===== CORRIGIDO: VENDA AGORA BAIXA RECIBO AUTOMATICAMENTE =====
 async function addVenda(){
   try{
     const d=await api('/api/vendas','POST',{produto_id:parseInt(val('vProd')),qtd:parseInt(val('vQtd')||1),cliente:val('vCliente')||'Cliente Balcão',cliente_tel:val('vTel'),pagamento:val('vPag'),data_pagamento:val('vDataPag')});
     toast('Venda feita • '+d.total+' MT');
-    // Pergunta se quer recibo e baixa direto, sem window.open
-    if(confirm('Venda feita • '+d.total+' MT\nQueres baixar o recibo PDF?')){
-      baixarReciboVenda(d.venda_id);
-    }
+    if(confirm('Venda feita • '+d.total+' MT\nQueres baixar o recibo PDF?')){ baixarReciboVenda(d.venda_id); }
     if(d.whatsapp_link) window.open(d.whatsapp_link,'_blank');
     carregarDados();
   }catch(e){ alert(e.message); }
 }
 async function addDespesa(){ try{ await api('/api/despesas','POST',{descricao:val('sDesc'),valor:parseFloat(val('sValor')||0),categoria:val('sCat')}); toast('Despesa registada'); carregarDados(); }catch(e){ alert(e.message); } }
 async function addForn(){ try{ await api('/api/fornecedores','POST',{nome:val('fNome'),telefone:val('fTel'),produto:val('fProd'),preco:parseFloat(val('fPreco')||0),localizacao:val('fLocal')}); toast('Fornecedor adicionado'); carregarDados(); }catch(e){ alert(e.message); } }
-
-// ===== CORRIGIDO: COMPRA AGORA PERGUNTA RECIBO =====
 async function addCompra(){
   try{
     const d=await api('/api/compras','POST',{fornecedor_id:parseInt(val('cForn')),produto:val('cProd'),qtd:parseInt(val('cQtd')||1),preco_unitario:parseFloat(val('cPreco')||0),pagamento:val('cPag')});
     toast('Compra registada • '+d.total+' MT');
-    if(confirm('Compra registada • '+d.total+' MT\nQueres baixar o recibo da compra?')){
-      baixarReciboCompra(d.compra_id);
-    }
+    if(confirm('Compra registada • '+d.total+' MT\nQueres baixar o recibo da compra?')){ baixarReciboCompra(d.compra_id); }
     carregarDados();
   }catch(e){ alert(e.message); }
 }
@@ -142,9 +163,6 @@ async function backup(){ try{ const d=await api('/api/backup'); const blob=new B
 function abrirTroca(){ document.getElementById('modalTroca').classList.remove('hidden'); }
 function fecharTroca(){ document.getElementById('modalTroca').classList.add('hidden'); }
 async function trocarConta(){ try{ const d=await api('/api/admin/switch','POST',{target_telefone:val('trocaTel'),admin_password:val('trocaSenha')}); localStorage.setItem('adminToken',token); token=d.token; localStorage.setItem('token',token); location.reload(); }catch(e){ alert(e.message); } }
-
-// ===== NOVO: FECHO DO DIA + EXPORT EXCEL + RECIBOS - SEM Not authenticated =====
-// Usa fetch com token, nunca window.open. É isto que resolve o teu erro.
 async function baixarComToken(url, nomeFicheiro){
   if(!token){ alert('Faz login de novo'); return; }
   const sep = url.includes('?') ? '&' : '?';
@@ -185,5 +203,4 @@ function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessen
 function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); toast('A exportar CSV...'); }
 function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
 function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
-
 if(token){ carregarDados(); }
