@@ -128,7 +128,6 @@ class Log(Base):
     detalhe: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 Base.metadata.create_all(engine)
-# MIGRACOES - TEMA + ENCOMENDA (nao parte BD velha)
 try:
     with engine.connect() as conn:
         if DBURL.startswith("sqlite"):
