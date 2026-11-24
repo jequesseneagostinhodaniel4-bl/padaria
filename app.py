@@ -7,6 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt
 from pwdlib import PasswordHash
 from pydantic import BaseModel
@@ -192,6 +193,8 @@ def funcionario_only(u: User = Depends(current_user)):
     return u
 
 app = FastAPI(title="PADARIA JEQUESSENE")
+# ===== O QUE FALTAVA 1: CORS =====
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 def home(): return open("static/index.html", encoding="utf-8").read()
@@ -216,6 +219,10 @@ class DespesaIn(BaseModel):
     descricao: str; valor: float; categoria: str = "Geral"
 class EncIn(BaseModel):
     cliente: str; telefone: str = ""; tipo: str = "Bolo de Aniversário"; data_entrega: str = ""; preco: float = 0; sinal: str = "Sem Sinal"; obs: str = ""
+class SenhaIn(BaseModel):
+    antiga: str; nova: str
+class PessoaEditIn(BaseModel):
+    nome: str = ""; bairro: str = ""; tipo: str = ""; email: str = ""
 
 @app.post("/api/register")
 def register(x: Register, d: Session = Depends(dbdep)):
@@ -248,6 +255,18 @@ def login(x: Login, d: Session = Depends(dbdep)):
 @app.get("/api/me")
 def me(u: User = Depends(current_user)):
     return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin}
+
+# ===== O QUE FALTAVA 2: MUDAR SENHA =====
+@app.post("/api/me/senha")
+def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    try: ok = pwd.verify(x.antiga, u.password_hash)
+    except Exception: ok = False
+    if not ok: raise HTTPException(401, "Senha antiga errada.")
+    if len(x.nova) < 4: raise HTTPException(400, "Nova senha muito curta, usa 4+")
+    u.password_hash = pwd.hash(x.nova); d.commit()
+    log_action(d, u.nome, u.tipo, "senha_trocada", "Trocou a senha")
+    return {"ok": True, "msg": "Senha trocada com sucesso!"}
+
 @app.get("/api/pessoas")
 def pessoas(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     lista = d.query(User).all() if u.is_admin else d.query(User).filter_by(tipo="Cliente").all()
@@ -270,6 +289,39 @@ def reativar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depend
     log_action(d, a.nome, "Admin", "reativar", f"Reativou {u.nome} - {u.telefone}")
     return {"ok": True, "msg": f"{u.nome} reativado"}
 
+# ===== O QUE FALTAVA 3: APAGAR + EDITAR PESSOA =====
+@app.delete("/api/pessoas/{pid}")
+def apagar_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    u = d.get(User, pid)
+    if not u: raise HTTPException(404, "Pessoa não existe")
+    if u.is_admin: raise HTTPException(400, "Não podes apagar o Admin!")
+    nome = u.nome
+    d.delete(u); d.commit()
+    log_action(d, a.nome, "Admin", "apagar_pessoa", f"Apagou {nome}")
+    return {"ok": True, "msg": f"{nome} apagado"}
+
+@app.put("/api/pessoas/{pid}")
+def editar_pessoa(pid: int, x: PessoaEditIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    u = d.get(User, pid)
+    if not u: raise HTTPException(404, "Pessoa não existe")
+    if x.nome: u.nome = x.nome
+    if x.bairro: u.bairro = x.bairro
+    if x.email: u.email = x.email
+    if x.tipo: u.tipo = normalizar_tipo(x.tipo)
+    d.commit()
+    return {"ok": True, "msg": "Pessoa atualizada"}
+
+# ===== O QUE FALTAVA 4: ALERTAS DE STOCK =====
+@app.get("/api/alertas")
+def alertas(u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    prods = d.query(Product).all()
+    esgotados = [p for p in prods if p.stock <= 0]
+    acabando = [p for p in prods if 0 < p.stock <= p.stock_minimo]
+    msgs = []
+    for p in esgotados: msgs.append(f"❌ ACABOU: {p.nome} - stock 0")
+    for p in acabando: msgs.append(f"⚠️ ESTÁ A ACABAR: {p.nome} - só tem {p.stock}")
+    return {"total": len(msgs), "mensagens": msgs, "tem_alerta": len(msgs) > 0}
+
 @app.post("/api/admin/switch")
 def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     if not pwd.verify(x.admin_password, a.password_hash): raise HTTPException(401, "Senha do Admin errada!")
@@ -280,7 +332,7 @@ def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depe
     return {"token": make_token(t), "user": {"nome": t.nome, "tipo": t.tipo}}
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
+    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": p.preco - p.custo, "alerta": p.stock <= p.stock_minimo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
 @app.post("/api/products")
 def add_product(x: ProdIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     p = Product(**x.model_dump()); p.updated_by = u.nome; d.add(p); d.commit(); log_action(d, u.nome, u.tipo, "produto_criar", x.nome); return {"ok": True}
@@ -289,7 +341,11 @@ def edit_product(pid: int, x: ProdIn, u: User = Depends(funcionario_only), d: Se
     p = d.get(Product, pid)
     if not p: raise HTTPException(404, "Não existe")
     old = f"{p.nome} {p.preco} MT stock {p.stock}"
-    for k, v in x.model_dump().items(): setattr(p, k, v)
+    # ===== CORRIGIDO: não apaga foto se não enviares foto nova =====
+    dados = x.model_dump()
+    if not dados.get("foto"):
+        dados.pop("foto")
+    for k, v in dados.items(): setattr(p, k, v)
     p.updated_by = u.nome; p.updated_at = agora(); d.commit(); log_action(d, u.nome, u.tipo, "produto_editar", f"De {old} para {p.nome} {p.preco} MT"); return {"ok": True}
 @app.delete("/api/products/{pid}")
 def del_product(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
