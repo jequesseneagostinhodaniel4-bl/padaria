@@ -1,19 +1,28 @@
-// PADARIA JEQUESSENE V2 - COMPLETO + TEMA
+// PADARIA JEQUESSENE V2 - COMPLETO + TEMA CORRIGIDO
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
-// ===== TEMA COMPLETO =====
+function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+// ===== TEMA COMPLETO - CORRIGIDO =====
 async function aplicarTema(){
   let preto = localStorage.getItem('tema_jeq') === 'preto';
   if(token){
     try{ const r = await fetch('/api/tema', {headers: H()}); if(r.ok){ const d = await r.json(); preto = d.tema === 'preto'; localStorage.setItem('tema_jeq', d.tema); } }catch(e){}
   }
   document.body.classList.toggle('tema-preto', preto);
-  const b = document.getElementById('btn-tema');
-  if(b) b.innerText = preto ? '☀️ Branco' : '🌙 Preto';
-  if(!b){
-    const btn = document.createElement('button'); btn.id='btn-tema'; btn.onclick=mudarTema; btn.innerText=preto?'☀️ Branco':'🌙 Preto';
-    btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:#111;color:#fff;border:none;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer';
-    document.body.appendChild(btn);
+  let b = document.getElementById('btn-tema');
+  if(b){
+    b.innerText = preto ? '☀️ Branco' : '🌙 Preto';
+  } else {
+    // Se o index.html for velho e não tiver botão, cria dentro do topbar se existir, senão flutuante
+    const topActions = document.querySelector('.top-actions');
+    const btn = document.createElement('button');
+    btn.id='btn-tema'; btn.className='btn-tema'; btn.onclick=mudarTema;
+    btn.innerText=preto?'☀️ Branco':'🌙 Preto';
+    if(topActions){ topActions.prepend(btn); }
+    else {
+      btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:#111;color:#fff;border:none;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer';
+      document.body.appendChild(btn);
+    }
   }
 }
 async function mudarTema(){
@@ -21,13 +30,17 @@ async function mudarTema(){
   document.body.classList.toggle('tema-preto', preto);
   localStorage.setItem('tema_jeq', preto ? 'preto' : 'branco');
   const b = document.getElementById('btn-tema');
-  if(b){ b.innerText = preto ? '☀️ Branco' : '🌙 Preto'; b.style.background = preto ? '#fff' : '#111'; b.style.color = preto ? '#111' : '#fff'; }
+  if(b){ b.innerText = preto ? '☀️ Branco' : '🌙 Preto'; }
   if(token){ try{ await fetch('/api/tema?tema='+(preto?'preto':'branco'), {method:'POST', headers:H()}); }catch(e){} }
   toast(preto ? 'Modo Preto ativado' : 'Modo Branco ativado');
 }
+window.mudarTema = mudarTema;
+window.aplicarTema = aplicarTema;
+// Aplica logo mesmo antes de login
+if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); }
 document.addEventListener('DOMContentLoaded', aplicarTema);
 setTimeout(aplicarTema, 300);
-function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+setTimeout(aplicarTema, 1000);
 async function api(u,m,b){ const r=await fetch(u,{method:m||'GET',headers:H(),body:b?JSON.stringify(b):undefined}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.detail||'Erro'); return d; }
 function val(id){ return document.getElementById(id)?.value||''; }
 function esc(s){ return String(s||'').replace(/'/g,"\\'"); }
