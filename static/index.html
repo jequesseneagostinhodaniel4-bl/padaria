@@ -3,19 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padaria| Gestão Comercial</title>
+<title>Padaria | Gestão Comercial</title>
 <link rel="stylesheet" href="/static/style.css">
 <style>
-  /* FUNDO SÓ NO LOGIN - NUNCA DENTRO DO SISTEMA */
+  /* LOGIN PROFISSIONAL - CANTO DIREITO */
   .login-bg{
     background-image:url('/static/fundo.jpg'), url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200') !important;
     background-size:cover; background-position:center;
+    min-height:100vh;
+    display:flex !important; align-items:center !important; justify-content:flex-end !important;
+    padding:32px !important;
+    position:relative;
+  }
+  .login-overlay{
+    background: linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.15) 55%, rgba(0,0,0,.35) 100%) !important;
   }
   #app{ background:#faf8f5 !important; background-image:none !important; }
   .logo-fallback{
     width:72px;height:72px;border-radius:50%;background:#b88a2e;
     display:flex;align-items:center;justify-content:center;
     font-size:32px;margin:0 auto;color:#fff;font-family:Georgia,serif;
+  }
+  .login-card{
+    position:relative !important; z-index:2 !important;
+    width:400px !important; max-width:92vw !important;
+    margin-right:24px !important;
+    background:rgba(255,255,255,.97) !important;
+    border-radius:22px !important; padding:30px 28px !important;
+    box-shadow:0 25px 60px rgba(0,0,0,.45) !important;
+    text-align:center;
+  }
+  .login-card h1{ font-size:24px !important; letter-spacing:4px !important; margin:12px 0 4px !important; color:#222 !important; }
+  .login-card .sub{ color:#777 !important; font-size:13px !important; margin:0 0 4px !important; }
+  .login-card .sub2{ color:#b88a2e !important; font-weight:600 !important; font-size:13px !important; margin:0 0 12px !important; }
+  .login-badge{
+    background:#FFF7E6 !important; color:#8B5E2E !important;
+    border:1px solid #F0D9A0 !important;
+    padding:8px 10px !important; border-radius:999px !important;
+    font-size:12px !important; font-weight:600 !important; margin-bottom:16px !important;
+  }
+  .login-card h2{ text-align:left !important; font-size:18px !important; margin:0 0 14px !important; }
+  .login-card input, .login-card select{
+    width:100% !important; padding:13px 14px !important; margin-bottom:11px !important;
+    border:1px solid #E5E0D8 !important; border-radius:11px !important;
+    outline:none !important; font-size:14px !important; background:#fff !important;
+  }
+  .login-card input:focus{ border-color:#b88a2e !important; }
+  .login-card .btn-dark{
+    width:100% !important; padding:14px !important; border-radius:11px !important;
+    background:#2F2A26 !important; font-size:15px !important; font-weight:700 !important;
+  }
+  .login-card details{ text-align:left !important; margin-top:14px !important; }
+  .login-card details summary{ cursor:pointer; font-weight:700; color:#8B5E2E; }
+  .login-card .pass-wrap{ position:relative; }
+  .login-card .pass-wrap .eye{ position:absolute; right:8px; top:8px; background:#eee; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+  @media(max-width:700px){
+    .login-bg{ justify-content:center !important; padding:16px !important; }
+    .login-card{ margin-right:0 !important; width:100% !important; }
   }
 </style>
 </head>
@@ -49,7 +93,6 @@
         <div class="pass-wrap"><input id="rSenha" type="password" placeholder="Cria senha"><button type="button" class="eye" onclick="mostrarSenha('rSenha', this)">Ver</button></div>
         <button class="btn-p" onclick="registar()">Criar Conta</button>
       </details>
-      
     </div>
   </div>
 </div>
@@ -70,7 +113,7 @@
     <div id="dividasSec" class="card hidden"><h2>Dívidas - Quem deve, quanto deve, quando paga</h2><div id="listaDividas"></div></div>
     <div id="adminSec" class="card hidden"><h2>Painel do Administrador - Só Jequessene</h2><p class="muted">Recibos de tudo, história de compra e venda, e quem editou o quê.</p><div class="flex"><button class="btn-p" onclick="carregarPainelAdmin()">Atualizar Painel</button><button class="btn-y" onclick="abrirTroca()">Trocar de Conta</button><button onclick="backup()">Backup</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
   </main>
-  <footer class="footer">Padaria  • Matola, Moçambique • Sistema de Gestão Comercial • © 2026</footer>
+  <footer class="footer">Padaria • Matola, Moçambique • Sistema de Gestão Comercial • © 2026</footer>
 </div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de Conta - Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button onclick="trocarConta()">Entrar nessa conta</button><button onclick="fecharTroca()" style="background:#888">Cancelar</button></div></div></div>
 <nav id="barra" class="hidden"><button onclick="mostrar('vendasSec')">Vender</button><button onclick="mostrar('produtosSec')">Produtos</button><button onclick="mostrar('fornecedorSec')">Fornecedor</button><button onclick="mostrar('encomendasSec')">Encomendas</button><button onclick="mostrar('adminSec')">Admin</button></nav>
