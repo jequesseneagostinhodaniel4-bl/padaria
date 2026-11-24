@@ -113,6 +113,10 @@ class Encomenda(Base):
     preco: Mapped[float] = mapped_column(Float, default=0)
     sinal: Mapped[str] = mapped_column(String(60), default="Sem Sinal")
     obs: Mapped[str] = mapped_column(Text, default="")
+    ponto: Mapped[str] = mapped_column(Text, default="")
+    avaliacao: Mapped[int] = mapped_column(Integer, default=0)
+    criado_por: Mapped[str] = mapped_column(String(120), default="")
+    cliente_foto: Mapped[str] = mapped_column(Text, default="")
     estado: Mapped[str] = mapped_column(String(30), default="Pendente")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 class Log(Base):
@@ -124,19 +128,28 @@ class Log(Base):
     detalhe: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 Base.metadata.create_all(engine)
+# MIGRACOES - TEMA + ENCOMENDA (nao parte BD velha)
 try:
     with engine.connect() as conn:
         if DBURL.startswith("sqlite"):
-            cols = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
-            if "tema" not in cols:
-                conn.execute(text("ALTER TABLE users ADD COLUMN tema VARCHAR(20) DEFAULT 'branco'"))
-                conn.commit()
+            cols_u = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+            if "tema" not in cols_u:
+                conn.execute(text("ALTER TABLE users ADD COLUMN tema VARCHAR(20) DEFAULT 'branco'")); conn.commit()
+            cols_e = [r[1] for r in conn.execute(text("PRAGMA table_info(encomendas)")).fetchall()]
+            if "ponto" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN ponto TEXT DEFAULT ''")); conn.commit()
+            if "criado_por" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN criado_por VARCHAR(120) DEFAULT ''")); conn.commit()
+            if "avaliacao" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN avaliacao INTEGER DEFAULT 0")); conn.commit()
+            if "cliente_foto" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN cliente_foto TEXT DEFAULT ''")); conn.commit()
         else:
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tema VARCHAR(20) DEFAULT 'branco'"))
+            conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS ponto TEXT DEFAULT ''"))
+            conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS criado_por VARCHAR(120) DEFAULT ''"))
+            conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS avaliacao INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS cliente_foto TEXT DEFAULT ''"))
             conn.commit()
-    print("Migracao tema OK")
+    print("Migracao tema+encomenda OK")
 except Exception as e:
-    print("Migracao tema ignorada:", e)
+    print("Migracao ignorada:", e)
 def dbdep():
     d = SessionLocal()
     try: yield d
@@ -218,6 +231,8 @@ class DespesaIn(BaseModel):
     descricao: str; valor: float; categoria: str = "Geral"
 class EncIn(BaseModel):
     cliente: str; telefone: str = ""; tipo: str = "Bolo de Aniversário"; data_entrega: str = ""; preco: float = 0; sinal: str = "Sem Sinal"; obs: str = ""
+class PontoIn(BaseModel):
+    ponto: str = ""; avaliacao: int = 0
 class SenhaIn(BaseModel):
     antiga: str; nova: str
 class PessoaEditIn(BaseModel):
@@ -257,8 +272,7 @@ def me(u: User = Depends(current_user)):
 def salvar_tema(tema: str = Query("branco"), u: User = Depends(current_user), d: Session = Depends(dbdep)):
     try:
         u.tema = "preto" if tema == "preto" else "branco"; d.commit()
-    except Exception:
-        d.rollback()
+    except Exception: d.rollback()
     return {"ok": True, "tema": tema}
 @app.get("/api/tema")
 def ler_tema(u: User = Depends(current_user)):
@@ -392,15 +406,41 @@ def add_despesa(x: DespesaIn, u: User = Depends(current_user), d: Session = Depe
     ds = Despesa(**x.model_dump(), criado_por=u.nome); d.add(ds); d.commit(); log_action(d, u.nome, u.tipo, "despesa", f"{x.descricao} = {x.valor} MT"); return {"ok": True}
 @app.get("/api/encomendas")
 def get_enc(u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    return [{"id": e.id, "cliente": e.cliente, "telefone": e.telefone, "tipo": e.tipo, "data_entrega": e.data_entrega, "preco": e.preco, "sinal": e.sinal, "obs": e.obs, "estado": e.estado, "whatsapp_link": whatsapp_link(e.telefone, f"Ola {e.cliente}! A tua encomenda {e.tipo} esta {e.estado}.")} for e in d.query(Encomenda).order_by(Encomenda.created_at.desc()).all()]
+    if u.is_admin or is_funcionario(u):
+        lista = d.query(Encomenda).order_by(Encomenda.created_at.desc()).all()
+    else:
+        lista = d.query(Encomenda).filter((Encomenda.telefone==u.telefone)|(Encomenda.criado_por==u.nome)).order_by(Encomenda.created_at.desc()).all()
+    out=[]
+    for e in lista:
+        cli = d.query(User).filter_by(telefone=e.telefone).first() if e.telefone else None
+        foto = (cli.foto if cli else "") or getattr(e,"cliente_foto","") or ""
+        out.append({"id": e.id, "cliente": e.cliente, "telefone": e.telefone, "tipo": e.tipo, "data_entrega": e.data_entrega, "preco": e.preco, "sinal": e.sinal, "obs": e.obs, "ponto": getattr(e,"ponto","") or "", "avaliacao": getattr(e,"avaliacao",0) or 0, "criado_por": getattr(e,"criado_por","") or "", "cliente_foto": foto, "estado": e.estado, "whatsapp_link": whatsapp_link(e.telefone, f"Ola {e.cliente}! A tua encomenda {e.tipo} esta {e.estado}.")})
+    return out
 @app.post("/api/encomendas")
 def add_enc(x: EncIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    e = Encomenda(**x.model_dump()); d.add(e); d.commit(); log_action(d, u.nome, u.tipo, "encomenda", f"{x.tipo} para {x.cliente}"); return {"ok": True}
+    e = Encomenda(**x.model_dump()); e.criado_por = u.nome
+    if not e.cliente: e.cliente = u.nome
+    if not e.telefone: e.telefone = u.telefone
+    e.cliente_foto = u.foto or ""
+    d.add(e); d.commit(); log_action(d, u.nome, u.tipo, "encomenda", f"{x.tipo} para {e.cliente} - {e.preco} MT")
+    return {"ok": True, "id": e.id}
 @app.post("/api/encomendas/{eid}/entregar")
-def entregar(eid: int, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+def entregar(eid: int, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     e = d.get(Encomenda, eid)
     if not e: raise HTTPException(404, "Não existe")
-    e.estado = "Entregue"; d.commit(); return {"ok": True}
+    if e.estado == "Entregue": return {"ok": True}
+    e.estado = "Entregue"; d.commit()
+    p = d.query(Product).filter_by(nome=e.tipo).first(); total = e.preco or (p.preco if p else 0); custo = p.custo if p else 0
+    if p and p.stock > 0: p.stock -= 1
+    v = Venda(cliente=e.cliente, cliente_tel=e.telefone, vendedor=u.nome, produto=e.tipo, qtd=1, total=total, custo_total=custo, lucro=total-custo, pagamento="Encomenda", estado="Pago", data_pagamento=e.data_entrega)
+    d.add(v); d.commit(); log_action(d, u.nome, u.tipo, "encomenda_entregue_venda", f"{e.tipo} entregue -> venda {total} MT")
+    return {"ok": True}
+@app.post("/api/encomendas/{eid}/ponto")
+def deixar_ponto(eid: int, x: PontoIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    e = d.get(Encomenda, eid)
+    if not e: raise HTTPException(404, "Não existe")
+    e.ponto = x.ponto; e.avaliacao = x.avaliacao; d.commit(); log_action(d, u.nome, u.tipo, "ponto_cliente", f"{u.nome} deixou ponto: {x.ponto[:100]}")
+    return {"ok": True, "msg": "Ponto guardado!"}
 @app.get("/api/dashboard")
 def dashboard(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).all(); produtos = d.query(Product).all(); users = d.query(User).all(); despesas = d.query(Despesa).all(); compras = d.query(Compra).all(); hoje = date.today()
@@ -416,8 +456,15 @@ def dashboard(u: User = Depends(current_user), d: Session = Depends(dbdep)):
     mes_vendas = sum(x.total for x in vendas if x.created_at.month == hoje.month)
     mes_lucro = sum(x.lucro for x in vendas if x.created_at.month == hoje.month) - sum(x.total for x in compras if x.created_at.month == hoje.month) - sum(x.valor for x in despesas if x.created_at.month == hoje.month)
     META_MES = 50000
-    meta_pct = min(100, round((mes_vendas / META_MES * 100))) if META_MES else 0
-    return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": mes_vendas, "lucro": mes_lucro}, "meta": {"objetivo": META_MES, "atingido": mes_vendas, "pct": meta_pct, "falta": max(0, META_MES - mes_vendas)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
+    def foto_cliente(v):
+        cli = None
+        if v.cliente_tel: cli = d.query(User).filter_by(telefone=v.cliente_tel).first()
+        if not cli: cli = d.query(User).filter_by(nome=v.cliente).first()
+        return (cli.foto if cli else "") or ""
+    ult_vendas = sorted(vendas, key=lambda x: x.created_at, reverse=True)[:8]
+    quem_comprou = [{"cliente": v.cliente, "foto": foto_cliente(v), "produto": v.produto, "qtd": v.qtd, "total": v.total, "pagamento": v.pagamento, "data": v.created_at.strftime("%d/%m %H:%M")} for v in ult_vendas]
+    vendas_enc = [{"cliente": v.cliente, "foto": foto_cliente(v), "produto": v.produto, "total": v.total, "data": v.created_at.strftime("%d/%m %H:%M")} for v in vendas if v.pagamento=="Encomenda"]
+    return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": mes_vendas, "lucro": mes_lucro}, "meta": {"objetivo": META_MES, "atingido": mes_vendas, "pct": min(100, round(mes_vendas/META_MES*100)) if META_MES else 0, "falta": max(0, META_MES-mes_vendas)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "quem_comprou": quem_comprou, "vendas_encomendas": vendas_enc, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
 @app.get("/api/recibo/venda/{vid}")
 def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep), u: User = Depends(current_user)):
     v = d.get(Venda, vid)
