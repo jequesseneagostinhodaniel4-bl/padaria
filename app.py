@@ -20,7 +20,7 @@ DBURL = os.getenv("DATABASE_URL", "sqlite:///./padaria.db")
 # FIX RENDER: postgres:// -> postgresql://
 if DBURL.startswith("postgres://"):
     DBURL = DBURL.replace("postgres://", "postgresql://", 1)
-engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {"pool_pre_ping": True})
+engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {}, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 pwd = PasswordHash.recommended()
 def agora(): return datetime.now(timezone.utc)
@@ -222,7 +222,6 @@ class EncIn(BaseModel):
 def register(x: Register, d: Session = Depends(dbdep)):
     tel = clean_tel(x.telefone)
     if len(tel) < 9: raise HTTPException(400, "Telefone inválido.")
-    # SE JA TEM CONTA -> NAO CRIA DE NOVO, FAZ LOGIN DIRETO
     existente = d.query(User).filter_by(telefone=tel).first()
     if existente:
         try: ok = pwd.verify(x.password, existente.password_hash)
