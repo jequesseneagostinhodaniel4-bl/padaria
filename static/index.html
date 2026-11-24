@@ -5,10 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
 <script>
-  // Aplica tema ANTES da página aparecer - sem piscar branco
   try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}
 </script>
-<link rel="stylesheet" href="/static/style.css?v=3">
+<link rel="stylesheet" href="/static/style.css?v=4">
 <style>
 .kpi-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-top:4px solid #E8B84B;border-radius:18px;padding:16px 14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
 .kpi-novo .kpi-top{display:flex;justify-content:space-between;align-items:center;color:#8A6A3A;font-size:13px;margin-bottom:10px}
@@ -25,11 +24,18 @@ body.tema-preto .kpi-novo b, body.tema-preto .card-novo h2, body.tema-preto .das
 body.tema-preto .kpi-novo .kpi-top, body.tema-preto .card-novo p, body.tema-preto .dash-head p{color:#9CA3AF !important}
 body.tema-preto input, body.tema-preto select{background:#1A1D24 !important;color:#fff !important;border-color:#333 !important}
 body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
+/* DASHBOARD NOVO IGUAL A FOTO */
+.dash-card{background:#fff;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+.dash-card-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;font-weight:600}
+.mini-box{flex:1;background:#FFFBF2;border:1px solid #F5EEDD;border-radius:14px;padding:12px}
+body.tema-preto .dash-card{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important}
+body.tema-preto .dash-card-top{color:#9CA3AF !important}
+body.tema-preto .mini-box{background:#0F1115 !important;border-color:#333 !important}
+@media(max-width:820px){ .dash-grid-top, .dash-grid-bottom{grid-template-columns:1fr !important} }
 </style>
 </head>
 <body>
 <script>
-  // Aplica logo no body também
   try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); } }catch(e){}
 </script>
 <div id="loginPage" class="login-page">
@@ -69,23 +75,83 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
       <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
     </aside>
     <main class="main">
+      <!-- DASHBOARD NOVO - IGUAL A FOTO -->
       <div id="dashSec">
-        <div class="dash-head">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:52px;height:52px;background:#E8B84B;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px">🥐</div>
-            <div><h1 style="margin:0;font-size:28px;line-height:1;color:#2B1A0A">Padaria<br>Jequessene</h1><p style="margin:6px 0 0;color:#8A7A68;font-size:13px">Resumo de vendas • <span id="semanaTxt">Semana 18-24 Nov</span></p></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📊</span><b style="font-size:20px">Dashboard</b></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="background:#111;color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700">Dashboard</span>
+            <span style="padding:8px 12px;font-size:13px;color:#888">Clientes</span>
+            <span style="padding:8px 12px;font-size:13px;color:#888">Vendas</span>
+            <img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#5C3D1A" onerror="this.style.display='none'">
           </div>
-          <div style="display:flex;gap:8px;align-items:center"><span style="width:38px;height:38px;border-radius:50%;background:#F5EEDD;display:flex;align-items:center;justify-content:center;font-size:18px">🔔</span><img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#5C3D1A" onerror="this.style.display='none'"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div class="kpi-novo"><div class="kpi-top"><span>Vendas Semana</span><span>📈</span></div><b id="tVendas">0 MT</b></div>
-          <div class="kpi-novo"><div class="kpi-top"><span>Lucro líquido</span><span style="color:#2E9E5B">📊</span></div><b id="tLucro">0 MT</b></div>
-          <div class="kpi-novo"><div class="kpi-top"><span>Clientes</span><span>👥</span></div><b id="tClientes">0</b></div>
-          <div class="kpi-novo"><div class="kpi-top"><span>Dívidas</span><span>🧾</span></div><b id="tDividas">0 MT</b></div>
+        <div class="dash-grid-top" style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px">
+          <div class="dash-card">
+            <div class="dash-card-top"><span>💰 Total Vendas</span><span>MT ▾ &nbsp; ALL TIME ▾</span></div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="flex:1">
+                <h1 id="tVendas" style="margin:8px 0;font-size:34px;letter-spacing:-1px">0 MT</h1>
+                <p style="font-size:12px;color:#2E9E5B;margin:0">● +12% Vendas subiram, bom progresso.</p>
+                <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+                  <button class="btn btn-dark" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('vendasSec',document.querySelector('[data-sec=vendasSec]'))">+ Vender</button>
+                  <button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="fechoDia()">🧾 Fecho</button>
+                  <button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="exportarExcel()">↓ Exportar</button>
+                </div>
+              </div>
+              <div id="miniBarras" style="display:flex;align-items:flex-end;gap:4px;height:70px"></div>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-top"><span>🟢 Vendas Pagas</span><span style="font-size:11px;color:#888">ESTE MÊS</span></div>
+            <h1 id="tLucro" style="margin:8px 0;font-size:30px">0 MT</h1>
+            <p style="font-size:12px;color:#2E9E5B;margin:0">● Lucro líquido</p>
+            <div style="display:flex;gap:18px;margin-top:16px;font-size:13px">
+              <div><small style="color:#888">Hoje</small><br><b id="dashHojeValor">0 MT</b></div>
+              <div><small style="color:#888">Mês</small><br><b id="dashMesValor">0 MT</b></div>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-top"><span>🔴 Dívidas</span><span style="font-size:11px;color:#888">POR COBRAR</span></div>
+            <h1 id="tDividas" style="margin:8px 0;font-size:30px;color:#E74C3C">0 MT</h1>
+            <p style="font-size:12px;color:#E74C3C;margin:0">● Por cobrar aos clientes</p>
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <button class="btn btn-red" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('dividasSec',document.querySelector('[data-sec=dividasSec]'))">Ver Dívidas →</button>
+            </div>
+          </div>
         </div>
-        <div class="card-novo"><h2 style="margin:0;font-size:26px;color:#2B1A0A">Resumo da semana</h2><p id="resumoSemanaTxt" style="margin:8px 0 16px;color:#6B5A44;font-size:13px">A carregar...</p><div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div><div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px;color:#2B1A0A"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:16px;font-size:13px;color:#2B1A0A"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div></div>
-        <div class="card-novo"><div class="flex" style="margin:0"><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn" onclick="exportarCSV()">📥 CSV</button></div></div>
-        <div class="card-novo"><h2 style="font-size:20px">Mais vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex"><div class="card flex1"><h3>Lista</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por pagamento</h3><div id="porPag"></div></div></div><div id="dashHoje"></div></div>
+        <div class="dash-grid-bottom" style="display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:14px">
+          <div class="dash-card">
+            <div class="dash-card-top"><span>🎯 Meta do Mês</span><span>⋯</span></div>
+            <div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap">
+              <div style="background:#111;color:#fff;border-radius:18px;padding:16px;width:170px;text-align:center">
+                <small style="color:#aaa;font-size:11px">META MÊS</small>
+                <div style="font-size:22px;font-weight:800;margin:8px 0" id="metaValor">0 MT</div>
+                <div style="width:90px;height:90px;border-radius:50%;border:8px solid #333;border-top-color:#3B82F6;margin:10px auto;display:flex;align-items:center;justify-content:center"><span id="metaPct" style="font-size:14px">0%</span></div>
+                <span style="background:#2E9E5B;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px">● A subir</span>
+              </div>
+              <div style="flex:1;font-size:13px;min-width:140px">
+                <p style="display:flex;justify-content:space-between"><span>Vendas mês</span><b id="metaVendas">0 MT</b></p>
+                <div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar1" style="height:100%;background:#111;width:0%"></div></div>
+                <p style="display:flex;justify-content:space-between;margin-top:12px"><span>Clientes</span><b id="tClientes">0</b></p>
+                <div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar2" style="height:100%;background:#2E9E5B;width:60%"></div></div>
+                <p id="dashHoje" style="margin-top:12px;color:#888;font-size:12px"></p>
+              </div>
+            </div>
+            <div style="margin-top:14px"><b style="font-size:14px">Mais vendidos</b><div id="maisVendidosGrid" class="prod-grid" style="margin-top:10px"></div></div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-top"><span>📈 Vendas da Semana</span><span id="semanaTxt">Semana</span></div>
+            <p id="resumoSemanaTxt" style="font-size:12px;color:#888;margin:8px 0">A carregar...</p>
+            <div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div>
+            <div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px"></div>
+            <div style="display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:#666;flex-wrap:wrap"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+              <div class="mini-box"><small>Por pagamento</small><div id="porPag" style="font-size:13px;margin-top:6px"></div></div>
+              <div class="mini-box"><small>Lista</small><div id="maisVendidos" style="font-size:13px;margin-top:6px"></div></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
       <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Lucro = Preço - Custo. Ao vender, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div>
@@ -102,9 +168,8 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=4"></script>
 <script>
-// APENAS helpers da página - NÃO duplicar funções do app.js (fechoDia, baixarComToken, etc já estão no app.js)
 if(localStorage.getItem('tema_jeq')==='preto'){
   document.body.classList.add('tema-preto');
   setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100);
