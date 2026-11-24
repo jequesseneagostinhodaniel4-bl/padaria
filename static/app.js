@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - app.js LIMPO SEM ALERTA - FUNCIONA COM index.html
+// PADARIA JEQUESSENE - app.js COMPLETO - SEM ALERTA + DEMITIR
 let token = localStorage.getItem('token') || '';
 let ME = null;
 let PRODS = [];
@@ -30,28 +30,33 @@ function lerFoto(e, prevId){
   rd.onload = ()=>{ FOTO_TEMP = rd.result; if(prevId) document.getElementById(prevId).src = FOTO_TEMP; };
   rd.readAsDataURL(f);
 }
-
-// --- AUTH - NOMES CERTOS DO INDEX.HTML ---
 async function login(){
   try{
     const d = await api('/api/login','POST',{telefone:val('loginTel'), password:val('loginSenha')});
-    token=d.token; localStorage.setItem('token',token);
-    location.reload();
+    token=d.token; localStorage.setItem('token',token); location.reload();
   }catch(e){ document.getElementById('authMsg').innerText = e.message; }
 }
 async function registar(){
   try{
     const d = await api('/api/register','POST',{nome:val('rNome'), telefone:val('rTel'), idade:parseInt(val('rIdade')||18), email:val('rEmail'), foto:FOTO_TEMP, pais:val('rPais'), bairro:val('rBairro'), tipo:val('rTipo'), password:val('rSenha')});
     token=d.token; localStorage.setItem('token',token);
-    alert(d.ja_tinha_conta ? 'Já tinhas conta, entraste!' : 'Conta criada!');
-    location.reload();
+    alert(d.ja_tinha_conta ? 'Já tinhas conta, entraste!' : 'Conta criada!'); location.reload();
   }catch(e){ document.getElementById('authMsg').innerText = e.message; }
 }
-
-// --- DADOS ---
+async function demitirPessoa(id, nome){
+  if(!confirm('Demitir '+nome+'? Ele vai perder o acesso na hora!')) return;
+  try{ const d = await api('/api/pessoas/'+id+'/demitir','POST',{}); alert(d.msg); carregarDados(); }
+  catch(e){ alert(e.message); }
+}
+async function reativarPessoa(id, nome){
+  if(!confirm('Reativar '+nome+'? Ele volta a ter acesso.')) return;
+  try{ const d = await api('/api/pessoas/'+id+'/reativar','POST',{}); alert(d.msg); carregarDados(); }
+  catch(e){ alert(e.message); }
+}
 async function carregarDados(){
   if(!token) return;
-  try{ ME = await api('/api/me'); }catch(e){ return; }
+  try{ ME = await api('/api/me'); }
+  catch(e){ localStorage.removeItem('token'); token=''; location.reload(); return; }
   document.getElementById('loginBg').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('barra').classList.remove('hidden');
@@ -60,7 +65,6 @@ async function carregarDados(){
   if(ME.foto) document.getElementById('meuAvatar').src = ME.foto;
   if(localStorage.getItem('adminToken')) document.getElementById('btnVoltarAdmin').style.display='inline-block';
   if(ME.tipo==='Cliente') document.getElementById('avisoPerm').innerText = 'Como Cliente só podes ver produtos e encomendar.';
-
   try{
     const dash = await api('/api/dashboard');
     document.getElementById('tVendas').innerText = dash.semana.vendas + ' MT';
@@ -74,7 +78,6 @@ async function carregarDados(){
     document.getElementById('porPag').innerHTML = Object.entries(dash.por_pagamento).map(([k,v])=>`<p>${k}: ${v} MT</p>`).join('');
     document.getElementById('dashHoje').innerHTML = `<div class="kpi"><span>Hoje</span><b>${dash.hoje.vendas} MT</b></div><div class="kpi"><span>Mês</span><b>${dash.mes.vendas} MT</b></div>`;
   }catch(e){}
-
   try{
     PRODS = await api('/api/products');
     const q = val('pesquisaProd').toLowerCase();
@@ -94,10 +97,23 @@ async function carregarDados(){
     const aca = PRODS.filter(p=>p.stock>0 && p.stock<=5).map(p=>p.nome+' ('+p.stock+')').join(', ');
     document.getElementById('alertaStock').innerText = (esg? '❌ ACABOU: '+esg+' | ':'') + (aca? '⚠️ ESTÁ A ACABAR: '+aca : '') || 'Stock OK ✅';
   }catch(e){}
-
   try{
     const pessoas = await api('/api/pessoas');
-    document.getElementById('listaPessoas').innerHTML = pessoas.map(p=>`<div class="linha">${p.foto?`<img src="${p.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`:''} <b>${p.nome}</b> - ${p.telefone} - ${p.tipo} - ${p.bairro}</div>`).join('');
+    document.getElementById('listaPessoas').innerHTML = pessoas.map(p=>{
+      const ativo = p.active !== false;
+      let botoes = '';
+      if(ME.is_admin && p.id !== ME.id){
+        botoes = ativo
+          ? `<button class="btn-demitir" onclick="demitirPessoa(${p.id}, '${p.nome}')">Demitir ⛔</button>`
+          : `<button class="btn-reativar" onclick="reativarPessoa(${p.id}, '${p.nome}')">Reativar ✅</button>`;
+      }
+      return `<div class="linha" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;${!ativo?'opacity:0.6;background:#ffe0e0':''}">
+        ${p.foto?`<img src="${p.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`:''}
+        <b>${p.nome}</b> - ${p.telefone} - ${p.tipo} - ${p.bairro}
+        ${ativo?'<span class="badge-ativo">Ativo</span>':'<span class="badge-demitido">DEMITIDO - Sem acesso</span>'}
+        ${botoes}
+      </div>`;
+    }).join('');
   }catch(e){}
   try{
     const fin = await api('/api/financeiro');
@@ -116,8 +132,6 @@ async function carregarDados(){
     document.getElementById('listaEnc').innerHTML = enc.map(e=>`<div class="linha"><b>${e.cliente}</b> - ${e.tipo} - ${e.preco} MT - Entrega ${e.data_entrega} - ${e.estado} ${e.estado!=='Entregue'?`<button onclick="entregarEnc(${e.id})">Entregar</button>`:''} <a href="${e.whatsapp_link}" target="_blank">WhatsApp</a></div>`).join('');
   }catch(e){}
 }
-
-// --- PRODUTOS ---
 async function salvarProd(){
   const body = {nome:val('pNome'), categoria:val('pCat'), preco:parseFloat(val('pPreco')||0), custo:parseFloat(val('pCusto')||0), stock:parseInt(val('pStock')||0), stock_minimo:5, foto:FOTO_TEMP};
   if(!body.nome) return alert('Escreve nome do produto');
@@ -140,8 +154,6 @@ async function apagarProd(id){
   if(!confirm('Apagar produto?')) return;
   try{ await api('/api/products/'+id,'DELETE'); carregarDados(); }catch(e){ alert(e.message); }
 }
-
-// --- VENDAS / DESPESAS / COMPRAS / ENCOMENDAS ---
 async function addVenda(){
   try{
     const d = await api('/api/vendas','POST',{produto_id:parseInt(val('vProd')), qtd:parseInt(val('vQtd')||1), cliente:val('vCliente')||'Cliente Balcão', cliente_tel:val('vTel'), pagamento:val('vPag'), data_pagamento:val('vDataPag')});
@@ -165,8 +177,6 @@ async function addEnc(){
 async function entregarEnc(id){
   try{ await api('/api/encomendas/'+id+'/entregar','POST',{}); carregarDados(); }catch(e){ alert(e.message); }
 }
-
-// --- ADMIN ---
 async function carregarPainelAdmin(){
   try{
     const d = await api('/api/admin/painel');
@@ -189,6 +199,4 @@ async function trocarConta(){
     location.reload();
   }catch(e){ alert(e.message); }
 }
-
-// --- INICIO ---
-if(token) carregarDados();
+if(token){ carregarDados().catch(()=>{ localStorage.removeItem('token'); location.reload(); }); }
