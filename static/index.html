@@ -1,168 +1,139 @@
-// PADARIA JEQUESSENE V2 - PROFISSIONAL - TUDO ADICIONADO
-let token = localStorage.getItem('token') || '';
-let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
-function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
-async function api(u,m,b){ const r=await fetch(u,{method:m||'GET',headers:H(),body:b?JSON.stringify(b):undefined}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.detail||'Erro'); return d; }
-function val(id){ return document.getElementById(id)?.value||''; }
-function esc(s){ return String(s||'').replace(/'/g,"\\'"); }
-function toast(m){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1F150C;color:#fff;padding:12px 20px;border-radius:999px;z-index:999;font-weight:700'; document.body.appendChild(t);} t.innerText=m; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2600); }
-function mostrarSec(id, btn){
-  ['dashSec','pessoasSec','produtosSec','vendasSec','stockSec','fornecedorSec','encomendasSec','dividasSec','adminSec','historicoSec'].forEach(s=>document.getElementById(s)?.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
-  document.querySelectorAll('.sidebar button[data-sec]').forEach(b=>b.classList.remove('on'));
-  if(btn) btn.classList.add('on');
-  document.getElementById('sidebar')?.classList.remove('open');
-}
-function mostrar(id){ mostrarSec(id, document.querySelector(`[data-sec="${id}"]`)); }
-function sair(){ localStorage.removeItem('token'); localStorage.removeItem('adminToken'); location.reload(); }
-function voltarAdmin(){ const t=localStorage.getItem('adminToken'); if(t){ localStorage.setItem('token',t); localStorage.removeItem('adminToken'); location.reload(); } }
-function lerFoto(e){ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>FOTO_TEMP=rd.result; rd.readAsDataURL(f); }
-function lerFotoPerfil(e){ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ FOTO_PERFIL=rd.result; document.getElementById('perfilFotoPrev').src=FOTO_PERFIL; }; rd.readAsDataURL(f); }
-async function login(){
-  try{ const d=await api('/api/login','POST',{telefone:val('loginTel'),password:val('loginSenha')}); token=d.token; localStorage.setItem('token',token); await mostrarBoasVindas(); }
-  catch(e){ document.getElementById('authMsg').innerText=e.message; }
-}
-async function registar(){
-  try{ const d=await api('/api/register','POST',{nome:val('rNome'),telefone:val('rTel'),idade:parseInt(val('rIdade')||18),email:val('rEmail'),foto:'',pais:'Moçambique',bairro:val('rBairro'),tipo:val('rTipo'),password:val('rSenha')}); token=d.token; localStorage.setItem('token',token); await mostrarBoasVindas(); }
-  catch(e){ document.getElementById('authMsg2').innerText=e.message; }
-}
-async function mostrarBoasVindas(){
-  try{ ME=await api('/api/me'); }catch(e){ location.reload(); return; }
-  document.getElementById('loginPage').classList.add('hidden');
-  const w=document.getElementById('welcome'); w.classList.remove('hidden');
-  document.getElementById('welcomeNome').innerText='Bem-vindo, '+ME.nome+'!';
-  const hora=new Date().getHours();
-  document.getElementById('welcomeTexto').innerText = hora<12 ? 'Bom dia! Pão fresco à tua espera.' : hora<18 ? 'Boa tarde! Vamos vender bem hoje.' : 'Boa noite! Vamos fechar o dia bem.';
-  document.getElementById('welcomeFoto').src=ME.foto||'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200';
-}
-function entrarSistema(){ document.getElementById('welcome').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); carregarDados(); }
-async function demitirPessoa(id,nome){ if(!confirm('Demitir '+nome+'? Perde acesso na hora.')) return; try{ const d=await api('/api/pessoas/'+id+'/demitir','POST',{}); toast(d.msg); carregarDados(); }catch(e){ alert(e.message); } }
-async function reativarPessoa(id,nome){ if(!confirm('Reativar '+nome+'?')) return; try{ const d=await api('/api/pessoas/'+id+'/reativar','POST',{}); toast(d.msg); carregarDados(); }catch(e){ alert(e.message); } }
-async function pagarDivida(id,cliente){ if(!confirm(cliente+' pagou?')) return; try{ await api('/api/vendas/'+id+'/pagar','POST',{}); toast('Dívida paga'); carregarDados(); }catch(e){ alert(e.message); } }
-function abrirPerfil(){ document.getElementById('modalPerfil').classList.remove('hidden'); document.getElementById('perfilNome').value=ME?.nome||''; document.getElementById('perfilBairro').value=ME?.bairro||''; document.getElementById('perfilEmail').value=ME?.email||''; document.getElementById('perfilFotoPrev').src=ME?.foto||''; FOTO_PERFIL=''; }
-function fecharPerfil(){ document.getElementById('modalPerfil').classList.add('hidden'); }
-async function salvarPerfil(){
-  try{ const d=await api('/api/me','PUT',{nome:val('perfilNome'),bairro:val('perfilBairro'),email:val('perfilEmail'),foto:FOTO_PERFIL}); toast('Perfil atualizado!'); fecharPerfil(); if(FOTO_PERFIL) ME.foto=FOTO_PERFIL; carregarDados(); }catch(e){ alert(e.message); }
-}
-async function mudarSenha(){ try{ await api('/api/me/senha','POST',{antiga:val('senhaAntiga'),nova:val('senhaNova')}); toast('Senha trocada!'); }catch(e){ alert(e.message); } }
-async function carregarDados(){
-  if(!token) return;
-  try{ ME=await api('/api/me'); }catch(e){ localStorage.removeItem('token'); token=''; location.reload(); return; }
-  document.getElementById('loginPage').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  document.getElementById('saudacao').innerText='Olá, '+ME.nome;
-  document.getElementById('infoUser').innerText=ME.tipo+' • '+ME.telefone;
-  const foto=ME.foto||'';
-  if(foto){ document.getElementById('meuAvatar').src=foto; document.getElementById('sideFoto').src=foto; }
-  const isAdmin=ME.is_admin;
-  const isFunc=ME.tipo==='Funcionário';
-  const isCliente=ME.tipo==='Cliente';
-  document.querySelectorAll('#menuGestao button, #tituloGestao').forEach(el=>{ el.style.display = isAdmin ? '' : 'none'; });
-  if(isCliente){
-    document.querySelectorAll('#menuOperacao button').forEach(b=>{ const s=b.getAttribute('data-sec'); if(!['produtosSec','encomendasSec'].includes(s)) b.style.display='none'; });
-    const a=document.getElementById('avisoPerm'); a.classList.remove('hidden'); a.innerText='Como Cliente só podes ver produtos e encomendar.';
-    mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]'));
-  } else if(isFunc){ mostrarSec('vendasSec', document.querySelector('[data-sec="vendasSec"]')); }
-  else { mostrarSec('dashSec', document.querySelector('[data-sec="dashSec"]')); }
-  try{
-    const dash=await api('/api/dashboard');
-    document.getElementById('tVendas').innerText=dash.semana.vendas+' MT';
-    document.getElementById('tLucro').innerText=dash.semana.lucro+' MT';
-    document.getElementById('tClientes').innerText=dash.totais.clientes;
-    document.getElementById('tDividas').innerText=dash.totais.dividas+' MT';
-    document.getElementById('grafico').innerHTML=dash.grafico.map(g=>`<div class="bar" style="height:${Math.max(5,Math.min(100,g.vendas/50))}px"></div>`).join('');
-    document.getElementById('graficoLabels').innerHTML=dash.grafico.map(g=>`<span>${g.label}</span>`).join('');
-    document.getElementById('maisVendidos').innerHTML=dash.mais_vendidos.map(m=>`<p>${m.produto} - ${m.qtd}</p>`).join('')||'Ainda sem vendas';
-    document.getElementById('maisVendidosGrid').innerHTML=dash.mais_vendidos.map(m=>`<div class="prod-card"><b>${m.produto}</b><p>${m.qtd} vendidos</p></div>`).join('');
-    document.getElementById('porPag').innerHTML=Object.entries(dash.por_pagamento).map(([k,v])=>`<p>${k}: ${v} MT</p>`).join('');
-    document.getElementById('dashHoje').innerHTML=`<p>Hoje: ${dash.hoje.vendas} MT • Mês: ${dash.mes.vendas} MT</p>`;
-  }catch(e){}
-  try{
-    PRODS=await api('/api/products');
-    const q=val('pesquisaProd').toLowerCase();
-    const lista=PRODS.filter(p=>p.nome.toLowerCase().includes(q));
-    const imgAuto=(n)=>{ n=n.toLowerCase(); if(n.includes('bolo')) return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400'; if(n.includes('pão')||n.includes('pao')) return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400'; if(n.includes('croissant')||n.includes('pastel')) return 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400'; return 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400'; };
-    document.getElementById('gridProd').innerHTML=lista.map(p=>`<div class="prod-card"><img src="${p.foto||imgAuto(p.nome)}"><b>${p.nome}</b><p>${p.categoria} • ${p.preco} MT</p><p>Stock: <b>${p.stock}</b> ${p.stock<=0?'ACABOU':p.stock<=5?'A ACABAR':''}</p><p class="muted">Lucro: ${p.preco-p.custo} MT</p><button class="btn" onclick="editarProd(${p.id})">Editar</button><button class="btn btn-green" onclick="venderRapido(${p.id})">Vender</button>${isAdmin?`<button class="btn btn-red" onclick="apagarProd(${p.id})">Apagar</button>`:''}</div>`).join('');
-    document.getElementById('vProd').innerHTML=PRODS.map(p=>`<option value="${p.id}">${p.nome} - ${p.preco} MT (stock ${p.stock})</option>`).join('');
-    document.getElementById('listaStock').innerHTML=PRODS.map(p=>`<p>${p.nome} - Stock <b>${p.stock}</b></p>`).join('');
-    document.getElementById('alertaStock').innerText=PRODS.filter(p=>p.stock<=5).map(p=>p.nome).join(', ')||'Stock OK';
-  }catch(e){}
-  try{
-    if(isAdmin){
-      const pessoas=await api('/api/pessoas');
-      document.getElementById('listaPessoas').innerHTML=pessoas.map(p=>{ const ativo=p.active!==false; const bot= isAdmin && p.id!==ME.id ? (ativo?`<button class="btn btn-red" onclick="demitirPessoa(${p.id},'${esc(p.nome)}')">Demitir</button>`:`<button class="btn btn-green" onclick="reativarPessoa(${p.id},'${esc(p.nome)}')">Reativar</button>`) : ''; return `<div class="linha">${p.foto?`<img src="${p.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`:''}<b>${p.nome}</b> - ${p.telefone} - ${p.tipo} ${ativo?'<span class="badge-ok">Ativo</span>':'<span class="badge-off">DEMITIDO</span>'} ${bot}</div>`; }).join('');
-      const lt=document.getElementById('listaTroca'); if(lt) lt.innerHTML=pessoas.map(p=>`<button class="btn" onclick="document.getElementById('trocaTel').value='${p.telefone}'">${p.nome} - ${p.telefone}</button>`).join('');
-    }
-  }catch(e){}
-  try{
-    const fin=await api('/api/financeiro');
-    if(isAdmin){ document.getElementById('listaVendas').innerHTML=fin.vendas.slice(0,30).map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.cliente} <button class="btn" onclick="baixarReciboVenda(${v.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('listaDespesas').innerHTML=fin.despesas.map(d=>`<div class="linha">${d.descricao} - ${d.valor} MT</div>`).join(''); }
-    document.getElementById('listaCompras').innerHTML=fin.compras.map(c=>`<div class="linha">${c.produto} x${c.qtd} = ${c.total} MT - ${c.fornecedor} <button class="btn" onclick="baixarReciboCompra(${c.id})">🧾 Recibo</button></div>`).join('');
-    document.getElementById('listaDividas').innerHTML=fin.dividas.map(d=>`<div class="linha"><b>${d.cliente}</b> deve ${d.total} MT - ${d.produto} ${d.whatsapp_link?`<a href="${d.whatsapp_link}" target="_blank">WhatsApp</a>`:''} <button class="btn btn-green" onclick="pagarDivida(${d.id},'${esc(d.cliente)}')">Marcar pago</button></div>`).join('')||'Sem dívidas';
-  }catch(e){}
-  try{ const forn=await api('/api/fornecedores'); document.getElementById('listaForn').innerHTML=forn.map(f=>`<div class="linha"><b>${f.nome}</b> - ${f.produto} - ${f.preco} MT - ${f.telefone}</div>`).join(''); document.getElementById('cForn').innerHTML=forn.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); }catch(e){}
-  try{ const enc=await api('/api/encomendas'); document.getElementById('listaEnc').innerHTML=enc.map(e=>`<div class="linha"><b>${e.cliente}</b> - ${e.tipo} - ${e.preco} MT - ${e.estado} ${e.estado!=='Entregue'?`<button class="btn" onclick="entregarEnc(${e.id})">Entregar</button>`:''}</div>`).join(''); }catch(e){}
-}
-async function venderRapido(id){ document.getElementById('vProd').value=id; mostrarSec('vendasSec', document.querySelector('[data-sec="vendasSec"]')); toast('Produto escolhido'); }
-async function salvarProd(){ const body={nome:val('pNome'),categoria:val('pCat'),preco:parseFloat(val('pPreco')||0),custo:parseFloat(val('pCusto')||0),stock:parseInt(val('pStock')||0),stock_minimo:5,foto:FOTO_TEMP}; if(!body.nome) return alert('Escreve nome'); try{ if(EDIT_ID) await api('/api/products/'+EDIT_ID,'PUT',body); else await api('/api/products','POST',body); EDIT_ID=null; FOTO_TEMP=''; document.getElementById('btnSalvarProd').innerText='Adicionar produto'; toast('Guardado'); carregarDados(); }catch(e){ alert(e.message); } }
-function editarProd(id){ const p=PRODS.find(x=>x.id===id); if(!p) return; EDIT_ID=id; document.getElementById('pNome').value=p.nome; document.getElementById('pCat').value=p.categoria; document.getElementById('pPreco').value=p.preco; document.getElementById('pCusto').value=p.custo; document.getElementById('pStock').value=p.stock; document.getElementById('btnSalvarProd').innerText='Guardar edição'; mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); }
-async function apagarProd(id){ if(!confirm('Apagar?')) return; try{ await api('/api/products/'+id,'DELETE'); carregarDados(); }catch(e){ alert(e.message); } }
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Padaria Jequessene</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+/* ===== DASHBOARD NOVO - IGUAL À FOTO - NÃO PRECISA MEXER NO style.css ===== */
+.kpi-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-top:4px solid #E8B84B;border-radius:18px;padding:16px 14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.kpi-novo .kpi-top{display:flex;justify-content:space-between;align-items:center;color:#8A6A3A;font-size:13px;margin-bottom:10px}
+.kpi-novo b{font-size:30px;color:#2B1A0A;line-height:1;letter-spacing:-1px}
+.kpi-novo b small{font-size:16px}
+.card-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-radius:22px;padding:18px;margin-top:16px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
+.dash-head{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
+@media(max-width:600px){.kpi-novo b{font-size:24px}}
+</style>
+</head>
+<body>
+<div id="loginPage" class="login-page">
+  <div class="login-left">
+    <img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400">
+    <div class="shade"></div>
+    <div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola. Gestão simples para vender mais e perder menos.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div>
+  </div>
+  <div class="login-right"><div class="login-box">
+    <div class="login-logo">J</div><h2>PADARIA</h2><p class="sub">Gestão Comercial • Matola, Moçambique</p><p class="date" id="dataHoje"></p>
+    <div class="tabs2"><button id="tabLogin" class="on" onclick="mostrarLogin()">Entrar</button><button id="tabRegisto" onclick="mostrarRegisto()">Criar conta</button></div>
+    <div id="formLogin"><input id="loginTel" placeholder="Teu telefone • ex: 840000000" inputmode="numeric"><div class="pass"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" onclick="mostrarSenha('loginSenha',this)">Ver</button></div><button class="btn-main" onclick="login()">Entrar</button><p class="msg" id="authMsg"></p></div>
+    <div id="formRegistar" class="hidden"><input id="rNome" placeholder="Nome completo"><input id="rTel" placeholder="Telefone • ex: 841234567" inputmode="numeric"><input id="rIdade" type="number" placeholder="Idade"><input id="rEmail" type="email" placeholder="Email (opcional)"><input id="rBairro" placeholder="Bairro • ex: Matola"><select id="rTipo"><option>Cliente</option><option>Funcionário</option></select><div class="pass"><input id="rSenha" type="password" placeholder="Cria uma senha"><button type="button" onclick="mostrarSenha('rSenha',this)">Ver</button></div><button class="btn-gold" onclick="registar()">Criar conta</button><p class="msg" id="authMsg2"></p></div>
+    <p style="text-align:center;color:#8A7A68;font-size:12px;margin-top:14px">Ao entrar aceitas as regras da Padaria Jequessene.</p>
+  </div></div>
+</div>
+<div id="welcome" class="welcome hidden"><div><img id="welcomeFoto" src=""><h1 id="welcomeNome">Bem-vindo!</h1><p id="welcomeTexto">Bom trabalho hoje.</p><br><button onclick="entrarSistema()">Entrar no sistema →</button></div></div>
+<div id="app" class="hidden">
+  <header class="topbar"><div class="brand"><div class="brand-logo">J</div><div><b>Padaria Jequessene</b><small>Matola • <span id="dataTop"></span></small></div></div><div class="top-actions"><button class="btn" onclick="toggleMenu()">Menu</button><img id="meuAvatar" class="avatar-top" src="" onclick="abrirPerfil()" title="Meu perfil - trocar foto"><button class="btn btn-dark" onclick="abrirPerfil()">Meu perfil</button><button class="btn" onclick="sair()">Sair</button></div></header>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="perfil"><img id="sideFoto" src=""><div><b id="saudacao">Olá</b><br><small id="infoUser" style="color:#CFC3AE"></small></div></div>
+      <p id="avisoPerm" class="danger hidden"></p>
+      <h4>Operação</h4>
+      <div id="menuOperacao">
+        <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)">Dashboard</button>
+        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">Vender</button>
+        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">Comprar / Fornecedor</button>
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">Encomendas</button>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">Produtos</button>
+        <button data-sec="stockSec" onclick="mostrarSec('stockSec',this)">Stock</button>
+        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">Dívidas</button>
+      </div>
+      <h4 id="tituloGestao">Gestão</h4>
+      <div id="menuGestao"><button data-sec="pessoasSec" onclick="mostrarSec('pessoasSec',this)">Pessoas</button><button data-sec="adminSec" onclick="mostrarSec('adminSec',this)">Painel Admin</button></div>
+      <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
+    </aside>
+    <main class="main">
+      <!-- ===== DASHBOARD NOVO - IGUAL À FOTO ===== -->
+      <div id="dashSec">
+        <div class="dash-head">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:52px;height:52px;background:#E8B84B;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px">🥐</div>
+            <div>
+              <h1 style="margin:0;font-size:28px;line-height:1;color:#2B1A0A">Padaria<br>Jequessene</h1>
+              <p style="margin:6px 0 0;color:#8A7A68;font-size:13px">Resumo de vendas • <span id="semanaTxt">Semana 18-24 Nov</span></p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="width:38px;height:38px;border-radius:50%;background:#F5EEDD;display:flex;align-items:center;justify-content:center;font-size:18px">🔔</span>
+            <img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#5C3D1A" onerror="this.style.display='none'">
+          </div>
+        </div>
 
-// ===== CORRIGIDO: VENDA AGORA BAIXA RECIBO AUTOMATICAMENTE =====
-async function addVenda(){
-  try{
-    const d=await api('/api/vendas','POST',{produto_id:parseInt(val('vProd')),qtd:parseInt(val('vQtd')||1),cliente:val('vCliente')||'Cliente Balcão',cliente_tel:val('vTel'),pagamento:val('vPag'),data_pagamento:val('vDataPag')});
-    toast('Venda feita • '+d.total+' MT');
-    // Pergunta se quer recibo e baixa direto, sem window.open
-    if(confirm('Venda feita • '+d.total+' MT\nQueres baixar o recibo PDF?')){
-      baixarReciboVenda(d.venda_id);
-    }
-    if(d.whatsapp_link) window.open(d.whatsapp_link,'_blank');
-    carregarDados();
-  }catch(e){ alert(e.message); }
-}
-async function addDespesa(){ try{ await api('/api/despesas','POST',{descricao:val('sDesc'),valor:parseFloat(val('sValor')||0),categoria:val('sCat')}); toast('Despesa registada'); carregarDados(); }catch(e){ alert(e.message); } }
-async function addForn(){ try{ await api('/api/fornecedores','POST',{nome:val('fNome'),telefone:val('fTel'),produto:val('fProd'),preco:parseFloat(val('fPreco')||0),localizacao:val('fLocal')}); toast('Fornecedor adicionado'); carregarDados(); }catch(e){ alert(e.message); } }
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="kpi-novo"><div class="kpi-top"><span>Vendas Semana</span><span>📈</span></div><b id="tVendas">0 MT</b></div>
+          <div class="kpi-novo"><div class="kpi-top"><span>Lucro líquido</span><span style="color:#2E9E5B">📊</span></div><b id="tLucro">0 MT</b></div>
+          <div class="kpi-novo"><div class="kpi-top"><span>Clientes</span><span>👥</span></div><b id="tClientes">0</b></div>
+          <div class="kpi-novo"><div class="kpi-top"><span>Dívidas</span><span>🧾</span></div><b id="tDividas">0 MT</b></div>
+        </div>
 
-// ===== CORRIGIDO: COMPRA AGORA PERGUNTA RECIBO =====
-async function addCompra(){
-  try{
-    const d=await api('/api/compras','POST',{fornecedor_id:parseInt(val('cForn')),produto:val('cProd'),qtd:parseInt(val('cQtd')||1),preco_unitario:parseFloat(val('cPreco')||0),pagamento:val('cPag')});
-    toast('Compra registada • '+d.total+' MT');
-    if(confirm('Compra registada • '+d.total+' MT\nQueres baixar o recibo da compra?')){
-      baixarReciboCompra(d.compra_id);
-    }
-    carregarDados();
-  }catch(e){ alert(e.message); }
-}
-async function addEnc(){ try{ await api('/api/encomendas','POST',{cliente:val('eCliente'),telefone:val('eTel'),tipo:val('eTipo'),data_entrega:val('eData'),preco:parseFloat(val('ePreco')||0),sinal:val('eSinal'),obs:val('eObs')}); toast('Encomenda registada'); carregarDados(); }catch(e){ alert(e.message); } }
-async function entregarEnc(id){ try{ await api('/api/encomendas/'+id+'/entregar','POST',{}); carregarDados(); }catch(e){ alert(e.message); } }
-async function carregarPainelAdmin(){ try{ const d=await api('/api/admin/painel'); document.getElementById('adminResumo').innerHTML=`<p>Vendas: ${d.resumo.total_vendas} MT • Lucro líquido: ${d.resumo.lucro_liquido_final} MT • Dívidas: ${d.resumo.dividas} MT</p>`; document.getElementById('adminVendas').innerHTML='<h3>Últimas vendas</h3>'+d.ultimas_vendas.map(v=>`<div class="linha">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.vendedor} <button class="btn" onclick="baixarReciboVenda(${v.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminCompras').innerHTML='<h3>Últimas compras</h3>'+d.ultimas_compras.map(c=>`<div class="linha">${c.data} - ${c.produto} x${c.qtd} = ${c.total} MT <button class="btn" onclick="baixarReciboCompra(${c.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminFluxo').innerHTML='<h3>Quem fez o quê</h3>'+d.fluxo.map(l=>`<div class="linha">${l.data} - ${l.quem} - ${l.acao} - ${l.detalhe}</div>`).join(''); }catch(e){ alert(e.message); } }
-async function backup(){ try{ const d=await api('/api/backup'); const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup_padaria.json'; a.click(); }catch(e){ alert(e.message); } }
-function abrirTroca(){ document.getElementById('modalTroca').classList.remove('hidden'); }
-function fecharTroca(){ document.getElementById('modalTroca').classList.add('hidden'); }
-async function trocarConta(){ try{ const d=await api('/api/admin/switch','POST',{target_telefone:val('trocaTel'),admin_password:val('trocaSenha')}); localStorage.setItem('adminToken',token); token=d.token; localStorage.setItem('token',token); location.reload(); }catch(e){ alert(e.message); } }
+        <div class="card-novo">
+          <h2 style="margin:0;font-size:26px;color:#2B1A0A">Resumo da semana</h2>
+          <p id="resumoSemanaTxt" style="margin:8px 0 16px;color:#6B5A44;font-size:13px">A carregar...</p>
+          <div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div>
+          <div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px;color:#2B1A0A"></div>
+          <div style="display:flex;gap:18px;justify-content:center;margin-top:16px;font-size:13px;color:#2B1A0A"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div>
+        </div>
 
-// ===== NOVO: FECHO DO DIA + EXPORT EXCEL + RECIBOS - SEM Not authenticated =====
-// Usa fetch com token, nunca window.open. É isto que resolve o teu erro.
+        <div class="card-novo"><div class="flex" style="margin:0"><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn" onclick="exportarCSV()">📥 CSV</button></div></div>
+
+        <div class="card-novo"><h2 style="font-size:20px">Mais vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex"><div class="card flex1"><h3>Lista</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por pagamento</h3><div id="porPag"></div></div></div><div id="dashHoje"></div></div>
+      </div>
+      <!-- ===== FIM DASHBOARD NOVO ===== -->
+
+      <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar. Funcionário demitido perde o acesso na hora.</p><div id="listaPessoas"></div></div>
+      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Lucro = Preço - Custo. Ao vender, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div>
+      <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
+      <div id="stockSec" class="card hidden"><h2>Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
+      <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
+      <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option>Bolo de Aniversário</option><option>Bolo de Casamento</option><option>Bolo de Chocolate</option><option>Pastéis (Caixa 12)</option><option>Doces Festa</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><div id="listaEnc"></div></div>
+      <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
+      <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene. Aqui está a história completa: vendas, compras e quem fez o quê.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
+      <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
+    </main>
+  </div>
+  <footer class="footer">Padaria Jequessene • Matola • © 2026</footer>
+</div>
+<div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto • podes trocar quantas vezes quiseres</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
+<div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
+
+<script src="/static/app.js"></script>
+<script>
+document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
+document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='password'){el.type='text';btn.innerText='Esconder'}else{el.type='password';btn.innerText='Ver'}}
+function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
+function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+function getToken(){ return localStorage.getItem('token') || localStorage.getItem('padaria_token') || localStorage.getItem('jwt') || window.token || ''; }
+function authHeaders(){ const t = getToken(); return { 'Authorization': 'Bearer ' + t }; }
 async function baixarComToken(url, nomeFicheiro){
-  if(!token){ alert('Faz login de novo'); return; }
+  const token = getToken();
+  if(!token){ alert('Faz login de novo, sessão expirada.'); return; }
   const sep = url.includes('?') ? '&' : '?';
-  const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: { 'Authorization': 'Bearer ' + token } });
+  const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: authHeaders() });
   if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
   if(!res.ok){ alert('Erro ao baixar: ' + res.status); return; }
   const blob = await res.blob();
   const u = window.URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro;
   document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
-  toast('✅ Baixado: ' + nomeFicheiro);
 }
 async function fechoDia(){
+  const token = getToken();
   if(!token){ alert('Faz login de novo'); return; }
   try{
-    const res = await fetch('/api/recibo/diario/json?token=' + encodeURIComponent(token), { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await fetch('/api/recibo/diario/json?token=' + encodeURIComponent(token), { headers: authHeaders() });
     if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
-    if(!res.ok){ alert('Erro fecho: ' + res.status); return; }
     const r = await res.json();
     let modal = document.getElementById('modalFecho');
     if(!modal){ modal = document.createElement('div'); modal.id='modalFecho'; modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(modal); }
@@ -179,11 +150,40 @@ async function fechoDia(){
       <div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div>
     </div>`;
     modal.style.display='flex';
-  }catch(e){ alert('Erro fecho: ' + e.message); }
+  }catch(e){ alert('Erro fecho: ' + e); }
 }
-function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessene.xlsx'); toast('A exportar Excel...'); }
-function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); toast('A exportar CSV...'); }
+function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessene.xlsx'); }
+function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); }
 function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
 function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
 
-if(token){ carregarDados(); }
+// ===== GRÁFICO NOVO - IGUAL À FOTO - VAI SER CHAMADO PELO app.js =====
+function desenharGraficoProf(dados){
+  const box = document.getElementById('graficoProf');
+  const labels = document.getElementById('graficoLabels');
+  const txt = document.getElementById('resumoSemanaTxt');
+  if(!box || !dados) return;
+  const maxV = Math.max(...dados.map(g=>g.vendas||0), 100);
+  const total = dados.reduce((s,g)=>s+(g.vendas||0),0);
+  const hojeV = dados[dados.length-1]?.vendas || 0;
+  const melhor = Math.max(...dados.map(g=>g.vendas||0));
+  if(txt) txt.innerText = `Total da semana: ${total} MT • Hoje: ${hojeV} MT • Melhor dia: ${melhor} MT`;
+  const semanaEl = document.getElementById('semanaTxt');
+  if(semanaEl && dados.length) semanaEl.innerText = 'Semana ' + dados[0].label + ' - ' + dados[dados.length-1].label;
+  box.innerHTML = dados.map((g,i)=>{
+    const v = g.vendas || 0;
+    const isHoje = i === dados.length - 1;
+    const h = v === 0 ? 28 : Math.max(28, Math.round((v / maxV) * 155));
+    const cor = v === 0 ? '#D9D9D9' : isHoje ? '#111111' : '#E8B84B';
+    return `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%">
+      <span style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;white-space:nowrap">${v} MT</span>
+      <div style="width:100%;max-width:46px;height:${h}px;background:${cor};border-radius:8px 8px 3px 3px"></div>
+    </div>`;
+  }).join('');
+  if(labels) labels.innerHTML = dados.map(g=>`<span style="flex:1;text-align:center">${g.label}</span>`).join('');
+  const avatar = document.getElementById('dashAvatar');
+  if(avatar && window.ME?.foto) avatar.src = window.ME.foto;
+}
+</script>
+</body>
+</html>
