@@ -4,27 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
-<script>
-  try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}
-</script>
-<link rel="stylesheet" href="/static/style.css?v=4">
+<script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
+<link rel="stylesheet" href="/static/style.css?v=6">
 <style>
-.kpi-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-top:4px solid #E8B84B;border-radius:18px;padding:16px 14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
-.kpi-novo .kpi-top{display:flex;justify-content:space-between;align-items:center;color:#8A6A3A;font-size:13px;margin-bottom:10px}
-.kpi-novo b{font-size:30px;color:#2B1A0A;line-height:1;letter-spacing:-1px}
-.kpi-novo b small{font-size:16px}
-.card-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-radius:22px;padding:18px;margin-top:16px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
-.dash-head{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
-@media(max-width:600px){.kpi-novo b{font-size:24px}}
-.btn-tema{background:#111;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
-body.tema-preto, html.tema-preto body{background:#0F1115 !important;color:#fff !important}
-body.tema-preto .topbar, body.tema-preto .sidebar, body.tema-preto .main, body.tema-preto .card, body.tema-preto .login-right{background:#0F1115 !important;color:#fff !important;border-color:#222 !important}
-body.tema-preto .kpi-novo, body.tema-preto .card-novo{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important;box-shadow:none !important}
-body.tema-preto .kpi-novo b, body.tema-preto .card-novo h2, body.tema-preto .dash-head h1{color:#fff !important}
-body.tema-preto .kpi-novo .kpi-top, body.tema-preto .card-novo p, body.tema-preto .dash-head p{color:#9CA3AF !important}
-body.tema-preto input, body.tema-preto select{background:#1A1D24 !important;color:#fff !important;border-color:#333 !important}
-body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
-/* DASHBOARD NOVO IGUAL A FOTO */
 .dash-card{background:#fff;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
 .dash-card-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;font-weight:600}
 .mini-box{flex:1;background:#FFFBF2;border:1px solid #F5EEDD;border-radius:14px;padding:12px}
@@ -32,30 +14,28 @@ body.tema-preto .dash-card{background:#1A1D24 !important;border-color:#2A2E37 !i
 body.tema-preto .dash-card-top{color:#9CA3AF !important}
 body.tema-preto .mini-box{background:#0F1115 !important;border-color:#333 !important}
 @media(max-width:820px){ .dash-grid-top, .dash-grid-bottom{grid-template-columns:1fr !important} }
+.btn-tema{background:#111;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
+body.tema-preto, html.tema-preto body{background:#0F1115 !important;color:#fff !important}
+body.tema-preto .topbar, body.tema-preto .sidebar, body.tema-preto .main, body.tema-preto .card, body.tema-preto .login-right{background:#0F1115 !important;color:#fff !important;border-color:#222 !important}
+body.tema-preto input, body.tema-preto select{background:#1A1D24 !important;color:#fff !important;border-color:#333 !important}
+body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 </style>
 </head>
 <body>
-<script>
-  try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); } }catch(e){}
-</script>
+<script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); } }catch(e){}</script>
 <div id="loginPage" class="login-page">
-  <div class="login-left">
-    <img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400">
-    <div class="shade"></div>
-    <div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola. Gestão simples para vender mais e perder menos.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div>
-  </div>
+  <div class="login-left"><img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400"><div class="shade"></div><div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div></div>
   <div class="login-right"><div class="login-box">
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button id="btn-tema-login" class="btn-tema" onclick="if(window.mudarTema){mudarTema()}else{document.body.classList.toggle('tema-preto');localStorage.setItem('tema_jeq',document.body.classList.contains('tema-preto')?'preto':'branco');this.innerText=document.body.classList.contains('tema-preto')?'☀️ Branco':'🌙 Preto'}">🌙 Preto</button></div>
     <div class="login-logo">J</div><h2>PADARIA</h2><p class="sub">Gestão Comercial • Matola, Moçambique</p><p class="date" id="dataHoje"></p>
     <div class="tabs2"><button id="tabLogin" class="on" onclick="mostrarLogin()">Entrar</button><button id="tabRegisto" onclick="mostrarRegisto()">Criar conta</button></div>
     <div id="formLogin"><input id="loginTel" placeholder="Teu telefone • ex: 840000000" inputmode="numeric"><div class="pass"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" onclick="mostrarSenha('loginSenha',this)">Ver</button></div><button class="btn-main" onclick="login()">Entrar</button><p class="msg" id="authMsg"></p></div>
     <div id="formRegistar" class="hidden"><input id="rNome" placeholder="Nome completo"><input id="rTel" placeholder="Telefone • ex: 841234567" inputmode="numeric"><input id="rIdade" type="number" placeholder="Idade"><input id="rEmail" type="email" placeholder="Email (opcional)"><input id="rBairro" placeholder="Bairro • ex: Matola"><select id="rTipo"><option>Cliente</option><option>Funcionário</option></select><div class="pass"><input id="rSenha" type="password" placeholder="Cria uma senha"><button type="button" onclick="mostrarSenha('rSenha',this)">Ver</button></div><button class="btn-gold" onclick="registar()">Criar conta</button><p class="msg" id="authMsg2"></p></div>
-    <p style="text-align:center;color:#8A7A68;font-size:12px;margin-top:14px">Ao entrar aceitas as regras da Padaria Jequessene.</p>
   </div></div>
 </div>
 <div id="welcome" class="welcome hidden"><div><img id="welcomeFoto" src=""><h1 id="welcomeNome">Bem-vindo!</h1><p id="welcomeTexto">Bom trabalho hoje.</p><br><button onclick="entrarSistema()">Entrar no sistema →</button></div></div>
 <div id="app" class="hidden">
-  <header class="topbar"><div class="brand"><div class="brand-logo">J</div><div><b>Padaria Jequessene</b><small>Matola • <span id="dataTop"></span></small></div></div><div class="top-actions"><button id="btn-tema" class="btn-tema" onclick="mudarTema()">🌙 Preto</button><button class="btn" onclick="toggleMenu()">Menu</button><img id="meuAvatar" class="avatar-top" src="" onclick="abrirPerfil()" title="Meu perfil - trocar foto"><button class="btn btn-dark" onclick="abrirPerfil()">Meu perfil</button><button class="btn" onclick="sair()">Sair</button></div></header>
+  <header class="topbar"><div class="brand"><div class="brand-logo">J</div><div><b>Padaria Jequessene</b><small>Matola • <span id="dataTop"></span></small></div></div><div class="top-actions"><button id="btn-tema" class="btn-tema" onclick="mudarTema()">🌙 Preto</button><button class="btn" onclick="toggleMenu()">Menu</button><img id="meuAvatar" class="avatar-top" src="" onclick="abrirPerfil()"><button class="btn btn-dark" onclick="abrirPerfil()">Meu perfil</button><button class="btn" onclick="sair()">Sair</button></div></header>
   <div class="layout">
     <aside class="sidebar" id="sidebar">
       <div class="perfil"><img id="sideFoto" src=""><div><b id="saudacao">Olá</b><br><small id="infoUser" style="color:#CFC3AE"></small></div></div>
@@ -75,90 +55,27 @@ body.tema-preto .mini-box{background:#0F1115 !important;border-color:#333 !impor
       <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
     </aside>
     <main class="main">
-      <!-- DASHBOARD NOVO - IGUAL A FOTO -->
       <div id="dashSec">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📊</span><b style="font-size:20px">Dashboard</b></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <span style="background:#111;color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700">Dashboard</span>
-            <span style="padding:8px 12px;font-size:13px;color:#888">Clientes</span>
-            <span style="padding:8px 12px;font-size:13px;color:#888">Vendas</span>
-            <img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#5C3D1A" onerror="this.style.display='none'">
-          </div>
-        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📊</span><b style="font-size:20px">Dashboard</b></div><div style="display:flex;gap:8px;align-items:center"><span style="background:#111;color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700">Dashboard</span><span style="padding:8px 12px;font-size:13px;color:#888">Clientes</span><span style="padding:8px 12px;font-size:13px;color:#888">Vendas</span><img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;background:#5C3D1A" onerror="this.style.display='none'"></div></div>
         <div class="dash-grid-top" style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px">
-          <div class="dash-card">
-            <div class="dash-card-top"><span>💰 Total Vendas</span><span>MT ▾ &nbsp; ALL TIME ▾</span></div>
-            <div style="display:flex;gap:12px;align-items:center">
-              <div style="flex:1">
-                <h1 id="tVendas" style="margin:8px 0;font-size:34px;letter-spacing:-1px">0 MT</h1>
-                <p style="font-size:12px;color:#2E9E5B;margin:0">● +12% Vendas subiram, bom progresso.</p>
-                <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-                  <button class="btn btn-dark" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('vendasSec',document.querySelector('[data-sec=vendasSec]'))">+ Vender</button>
-                  <button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="fechoDia()">🧾 Fecho</button>
-                  <button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="exportarExcel()">↓ Exportar</button>
-                </div>
-              </div>
-              <div id="miniBarras" style="display:flex;align-items:flex-end;gap:4px;height:70px"></div>
-            </div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-top"><span>🟢 Vendas Pagas</span><span style="font-size:11px;color:#888">ESTE MÊS</span></div>
-            <h1 id="tLucro" style="margin:8px 0;font-size:30px">0 MT</h1>
-            <p style="font-size:12px;color:#2E9E5B;margin:0">● Lucro líquido</p>
-            <div style="display:flex;gap:18px;margin-top:16px;font-size:13px">
-              <div><small style="color:#888">Hoje</small><br><b id="dashHojeValor">0 MT</b></div>
-              <div><small style="color:#888">Mês</small><br><b id="dashMesValor">0 MT</b></div>
-            </div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-top"><span>🔴 Dívidas</span><span style="font-size:11px;color:#888">POR COBRAR</span></div>
-            <h1 id="tDividas" style="margin:8px 0;font-size:30px;color:#E74C3C">0 MT</h1>
-            <p style="font-size:12px;color:#E74C3C;margin:0">● Por cobrar aos clientes</p>
-            <div style="display:flex;gap:8px;margin-top:16px">
-              <button class="btn btn-red" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('dividasSec',document.querySelector('[data-sec=dividasSec]'))">Ver Dívidas →</button>
-            </div>
-          </div>
+          <div class="dash-card"><div class="dash-card-top"><span>💰 Total Vendas</span><span>MT ▾ ALL TIME ▾</span></div><div style="display:flex;gap:12px;align-items:center"><div style="flex:1"><h1 id="tVendas" style="margin:8px 0;font-size:34px">0 MT</h1><p style="font-size:12px;color:#2E9E5B;margin:0">● +12% Vendas subiram, bom progresso.</p><div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn btn-dark" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('vendasSec',document.querySelector('[data-sec=vendasSec]'))">+ Vender</button><button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="fechoDia()">🧾 Fecho</button><button class="btn" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="exportarExcel()">↓ Exportar</button></div></div><div id="miniBarras" style="display:flex;align-items:flex-end;gap:4px;height:70px"></div></div></div>
+          <div class="dash-card"><div class="dash-card-top"><span>🟢 Vendas Pagas</span><span style="font-size:11px;color:#888">ESTE MÊS</span></div><h1 id="tLucro" style="margin:8px 0;font-size:30px">0 MT</h1><p style="font-size:12px;color:#2E9E5B;margin:0">● Lucro líquido</p><div style="display:flex;gap:18px;margin-top:16px;font-size:13px"><div><small style="color:#888">Hoje</small><br><b id="dashHojeValor">0 MT</b></div><div><small style="color:#888">Mês</small><br><b id="dashMesValor">0 MT</b></div></div></div>
+          <div class="dash-card"><div class="dash-card-top"><span>🔴 Dívidas</span><span style="font-size:11px;color:#888">POR COBRAR</span></div><h1 id="tDividas" style="margin:8px 0;font-size:30px;color:#E74C3C">0 MT</h1><p style="font-size:12px;color:#E74C3C;margin:0">● Por cobrar aos clientes</p><div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-red" style="padding:8px 14px;font-size:12px;border-radius:999px" onclick="mostrarSec('dividasSec',document.querySelector('[data-sec=dividasSec]'))">Ver Dívidas →</button></div></div>
         </div>
         <div class="dash-grid-bottom" style="display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:14px">
-          <div class="dash-card">
-            <div class="dash-card-top"><span>🎯 Meta do Mês</span><span>⋯</span></div>
-            <div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap">
-              <div style="background:#111;color:#fff;border-radius:18px;padding:16px;width:170px;text-align:center">
-                <small style="color:#aaa;font-size:11px">META MÊS</small>
-                <div style="font-size:22px;font-weight:800;margin:8px 0" id="metaValor">0 MT</div>
-                <div style="width:90px;height:90px;border-radius:50%;border:8px solid #333;border-top-color:#3B82F6;margin:10px auto;display:flex;align-items:center;justify-content:center"><span id="metaPct" style="font-size:14px">0%</span></div>
-                <span style="background:#2E9E5B;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px">● A subir</span>
-              </div>
-              <div style="flex:1;font-size:13px;min-width:140px">
-                <p style="display:flex;justify-content:space-between"><span>Vendas mês</span><b id="metaVendas">0 MT</b></p>
-                <div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar1" style="height:100%;background:#111;width:0%"></div></div>
-                <p style="display:flex;justify-content:space-between;margin-top:12px"><span>Clientes</span><b id="tClientes">0</b></p>
-                <div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar2" style="height:100%;background:#2E9E5B;width:60%"></div></div>
-                <p id="dashHoje" style="margin-top:12px;color:#888;font-size:12px"></p>
-              </div>
-            </div>
-            <div style="margin-top:14px"><b style="font-size:14px">Mais vendidos</b><div id="maisVendidosGrid" class="prod-grid" style="margin-top:10px"></div></div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-card-top"><span>📈 Vendas da Semana</span><span id="semanaTxt">Semana</span></div>
-            <p id="resumoSemanaTxt" style="font-size:12px;color:#888;margin:8px 0">A carregar...</p>
-            <div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div>
-            <div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px"></div>
-            <div style="display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:#666;flex-wrap:wrap"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div>
-            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-              <div class="mini-box"><small>Por pagamento</small><div id="porPag" style="font-size:13px;margin-top:6px"></div></div>
-              <div class="mini-box"><small>Lista</small><div id="maisVendidos" style="font-size:13px;margin-top:6px"></div></div>
-            </div>
-          </div>
+          <div class="dash-card"><div class="dash-card-top"><span>🎯 Meta do Mês</span><span>⋯</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap"><div style="background:#111;color:#fff;border-radius:18px;padding:16px;width:170px;text-align:center"><small style="color:#aaa;font-size:11px">META MÊS</small><div style="font-size:22px;font-weight:800;margin:8px 0" id="metaValor">0 MT</div><div style="width:90px;height:90px;border-radius:50%;border:8px solid #333;border-top-color:#3B82F6;margin:10px auto;display:flex;align-items:center;justify-content:center"><span id="metaPct" style="font-size:14px">0%</span></div><span style="background:#2E9E5B;color:#fff;font-size:11px;padding:4px 10px;border-radius:999px">● A subir</span></div><div style="flex:1;font-size:13px;min-width:140px"><p style="display:flex;justify-content:space-between"><span>Vendas mês</span><b id="metaVendas">0 MT</b></p><div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar1" style="height:100%;background:#111;width:0%"></div></div><p style="display:flex;justify-content:space-between;margin-top:12px"><span>Clientes</span><b id="tClientes">0</b></p><div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar2" style="height:100%;background:#2E9E5B;width:60%"></div></div><p id="dashHoje" style="margin-top:12px;color:#888;font-size:12px"></p></div></div><div style="margin-top:14px"><b style="font-size:14px">Mais vendidos</b><div id="maisVendidosGrid" class="prod-grid" style="margin-top:10px"></div></div></div>
+          <div class="dash-card"><div class="dash-card-top"><span>📈 Vendas da Semana</span><span id="semanaTxt">Semana</span></div><p id="resumoSemanaTxt" style="font-size:12px;color:#888;margin:8px 0">A carregar...</p><div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px;padding:10px 4px 0;border-bottom:2px solid #EDE6D6"></div><div id="graficoLabels" style="display:flex;gap:14px;padding:10px 4px 0;font-size:13px"></div><div style="display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:12px;color:#666;flex-wrap:wrap"><span>🟡 Dia normal</span><span>⬛ Hoje</span><span>⬜ Sem venda</span></div><div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><div class="mini-box"><small>Por pagamento</small><div id="porPag" style="font-size:13px;margin-top:6px"></div></div><div class="mini-box"><small>Lista</small><div id="maisVendidos" style="font-size:13px;margin-top:6px"></div></div></div></div>
         </div>
+        <!-- FOTO DO CLIENTE + O QUE COMPROU -->
+        <div class="dash-card" style="margin-top:14px"><div class="dash-card-top"><span>👥 Quem comprou - Foto do cliente + Produto</span><span>Últimas compras</span></div><div id="quemComprouGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px"></div></div>
+        <div class="dash-card" style="margin-top:14px"><div class="dash-card-top"><span>⭐ Vendas de Encomendas Entregues</span><span>Encomenda virou Venda</span></div><div id="listaEncVendasDash" style="margin-top:12px"></div></div>
       </div>
       <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
-      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Lucro = Preço - Custo. Ao vender, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div>
+      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Cliente só vê e compra. Funcionário/Admin gerem produtos.</p><p id="avisoClienteProd" class="hidden" style="background:#FFF3CD;padding:12px;border-radius:10px;font-weight:700">Como Cliente, tu só podes ver e comprar. Para encomendar, clica em Comprar no produto.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><div id="formAddProd"><h3>Adicionar / Editar - Só Funcionário / Admin</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div></div>
       <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
       <div id="stockSec" class="card hidden"><h2>Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
       <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
-      <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option>Bolo de Aniversário</option><option>Bolo de Casamento</option><option>Bolo de Chocolate</option><option>Pastéis (Caixa 12)</option><option>Doces Festa</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><div id="listaEnc"></div></div>
+      <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><p class="muted">Cliente, Funcionário e Admin podem fazer encomenda. Quando entrega, vira Venda.</p><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option value="">A carregar produtos...</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT - se vazio usa preço do produto"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><h3 style="margin-top:18px">📦 Minhas / Todas Encomendas</h3><div id="listaEnc"></div><h3>⭐ Vendas de Encomendas Entregues</h3><div id="listaEncVendas"></div></div>
       <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
       <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
       <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
@@ -166,14 +83,11 @@ body.tema-preto .mini-box{background:#0F1115 !important;border-color:#333 !impor
   </div>
   <footer class="footer">Padaria Jequessene • Matola • © 2026</footer>
 </div>
-<div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
+<div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto - aparece no Dashboard quando comprares</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js?v=4"></script>
+<script src="/static/app.js?v=6"></script>
 <script>
-if(localStorage.getItem('tema_jeq')==='preto'){
-  document.body.classList.add('tema-preto');
-  setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100);
-}
+if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100); }
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
 document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
 function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='password'){el.type='text';btn.innerText='Esconder'}else{el.type='password';btn.innerText='Ver'}}
