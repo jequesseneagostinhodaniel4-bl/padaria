@@ -43,7 +43,10 @@
       <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
     </aside>
     <main class="main">
-      <div id="dashSec"><div class="kpis"><div class="kpi"><span>Vendas • Semana</span><b id="tVendas">0 MT</b><small>Últimos 7 dias</small></div><div class="kpi"><span>Lucro líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi"><span>Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div><div class="card"><h2>Resumo da semana</h2><div class="chart" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div><div class="flex" style="margin-top:14px"><button class="btn btn-dark" onclick="window.open('/api/recibo/diario','_blank')">Fecho do dia</button><button class="btn" onclick="window.open('/api/export/excel','_blank')">Exportar Excel</button></div></div><div class="card"><h2>Mais vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex"><div class="card flex1"><h3>Lista</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por pagamento</h3><div id="porPag"></div></div></div><div id="dashHoje"></div></div></div>
+      <div id="dashSec"><div class="kpis"><div class="kpi"><span>Vendas • Semana</span><b id="tVendas">0 MT</b><small>Últimos 7 dias</small></div><div class="kpi"><span>Lucro líquido</span><b id="tLucro">0 MT</b><small>Já com compras e despesas</small></div><div class="kpi"><span>Clientes</span><b id="tClientes">0</b><small>Registados</small></div><div class="kpi"><span>Dívidas</span><b id="tDividas">0 MT</b><small>Por receber</small></div></div>
+      <!-- ===== CORRIGIDO AQUI: NÃO USA MAIS window.open ===== -->
+      <div class="card"><h2>Resumo da semana</h2><div class="chart" id="grafico"></div><div class="chart-labels" id="graficoLabels"></div><div class="flex" style="margin-top:14px"><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn" onclick="exportarCSV()">📥 Exportar CSV</button></div></div>
+      <div class="card"><h2>Mais vendidos</h2><div id="maisVendidosGrid" class="prod-grid"></div><div class="flex"><div class="card flex1"><h3>Lista</h3><div id="maisVendidos"></div></div><div class="card flex1"><h3>Por pagamento</h3><div id="porPag"></div></div></div><div id="dashHoje"></div></div></div>
       <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar. Funcionário demitido perde o acesso na hora.</p><div id="listaPessoas"></div></div>
       <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Lucro = Preço - Custo. Ao vender, o stock baixa sozinho.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><h3>Adicionar / Editar</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div>
       <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
@@ -51,7 +54,7 @@
       <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
       <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option>Bolo de Aniversário</option><option>Bolo de Casamento</option><option>Bolo de Chocolate</option><option>Pastéis (Caixa 12)</option><option>Doces Festa</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><div id="listaEnc"></div></div>
       <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
-      <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene. Aqui está a história completa: vendas, compras e quem fez o quê.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
+      <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene. Aqui está a história completa: vendas, compras e quem fez o quê.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div></div>
       <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
     </main>
   </div>
@@ -59,6 +62,7 @@
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto • podes trocar quantas vezes quiseres</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
+
 <script src="/static/app.js"></script>
 <script>
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
@@ -67,6 +71,56 @@ function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='p
 function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
 function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
 function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+
+// ===== CORREÇÃO FECHO + EXPORT + RECIBO - PADARIA JEQUESSENE =====
+// Não usa window.open, usa fetch com token. Resolve Not authenticated.
+function getToken(){
+  return localStorage.getItem('token') || localStorage.getItem('padaria_token') || localStorage.getItem('jwt') || window.token || '';
+}
+function authHeaders(){
+  const t = getToken();
+  return { 'Authorization': 'Bearer ' + t };
+}
+async function baixarComToken(url, nomeFicheiro){
+  const token = getToken();
+  if(!token){ alert('Faz login de novo, sessão expirada.'); return; }
+  const sep = url.includes('?') ? '&' : '?';
+  const res = await fetch(url + sep + 'token=' + encodeURIComponent(token), { headers: authHeaders() });
+  if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
+  if(!res.ok){ alert('Erro ao baixar: ' + res.status); return; }
+  const blob = await res.blob();
+  const u = window.URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = u; a.download = nomeFicheiro;
+  document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
+}
+async function fechoDia(){
+  const token = getToken();
+  if(!token){ alert('Faz login de novo'); return; }
+  try{
+    const res = await fetch('/api/recibo/diario/json?token=' + encodeURIComponent(token), { headers: authHeaders() });
+    if(res.status === 401){ alert('Sessão expirada. Faz login de novo.'); return; }
+    const r = await res.json();
+    let modal = document.getElementById('modalFecho');
+    if(!modal){ modal = document.createElement('div'); modal.id='modalFecho'; modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px'; document.body.appendChild(modal); }
+    modal.innerHTML = `<div style="background:#fff;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px;border-radius:16px;font-family:Arial">
+      <div style="text-align:center"><h2>🍞 PADARIA JEQUESSENE</h2><p>Fecho do Dia - ${r.data}</p><hr style="border:1px dashed #ccc;margin:12px 0"></div>
+      <p>Vendas Hoje: <b>${r.vendas_qtd} - ${r.vendas_total} MT</b></p>
+      <p>Compras Hoje: <b>${r.compras_total} MT</b></p>
+      <p>Despesas Hoje: <b>${r.despesas_total} MT</b></p>
+      <p>M-Pesa: ${r.mpesa} MT | e-Mola: ${r.emola} MT | Dinheiro: ${r.dinheiro} MT</p>
+      <h2 style="margin:12px 0">LUCRO LÍQUIDO: ${r.lucro_liquido} MT</h2>
+      <hr style="border:1px dashed #ccc;margin:12px 0">
+      <b>Vendas:</b><br>${r.vendas.map(v=>`${v.produto} x${v.qtd} - ${v.total} MT (${v.pagamento})`).join('<br>') || 'Sem vendas'}
+      <br><br><b>Compras:</b><br>${r.compras.map(c=>`${c.produto} x${c.qtd} - ${c.total} MT (${c.fornecedor})`).join('<br>') || 'Sem compras'}
+      <div style="display:flex;gap:8px;margin-top:16px"><button onclick="window.print()" style="flex:1;padding:12px;background:#111;color:#fff;border:none;border-radius:10px;cursor:pointer">🖨️ Imprimir Fecho</button><button onclick="document.getElementById('modalFecho').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer">Fechar</button></div>
+    </div>`;
+    modal.style.display='flex';
+  }catch(e){ alert('Erro fecho: ' + e); }
+}
+function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessene.xlsx'); }
+function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); }
+function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
+function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
 </script>
 </body>
 </html>
