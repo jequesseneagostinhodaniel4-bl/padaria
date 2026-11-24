@@ -52,8 +52,6 @@ button{font-family:inherit}
 .sidebar .sair{color:#FF9A9A}
 .main{flex:1;padding:22px;max-width:1080px;margin:0 auto;width:100%}
 @media(max-width:820px){ .sidebar{position:fixed;left:-260px;top:66px;z-index:50;transition:.25s} .sidebar.open{left:0} .main{padding:14px} }
-
-/* ===== DASHBOARD NOVO - IGUAL À FOTO ===== */
 .kpis{display:none!important}
 .kpi-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-top:4px solid #E8B84B;border-radius:18px;padding:16px 14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
 .kpi-novo .kpi-top{display:flex;justify-content:space-between;align-items:center;color:#8A6A3A;font-size:13px;margin-bottom:10px}
@@ -62,8 +60,6 @@ button{font-family:inherit}
 .card-novo{background:#FFFBF2;border:1px solid #F5EEDD;border-radius:22px;padding:18px;margin-top:16px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
 .dash-head{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
 @media(max-width:600px){ .kpi-novo b{font-size:24px} .kpi-novo{padding:14px 12px} }
-
-/* KPIs antigos - mantidos para compatibilidade mas escondidos no dash novo */
 .kpi{background:#fff;border:1px solid #EDE6DA;border-radius:16px;padding:16px}
 .kpi span{font-size:12px;color:#8A7A68;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .kpi b{display:block;font-size:26px;margin:6px 0 2px}
@@ -89,18 +85,37 @@ button{font-family:inherit}
 .prod-card b{font-size:16px}
 .prod-card p{margin:4px 0;color:#6B5D4D;font-size:13px}
 .linha{background:#FBF8F2;border:1px solid #EDE6DA;border-radius:12px;padding:12px;margin:6px 0;font-size:14px}
-
-/* ===== GRÁFICO NOVO - CORRIGIDO, NÃO COLA MAIS ===== */
 .chart{display:none!important}
 .bar{display:none!important}
 .chart-labels{display:none!important}
 #graficoProf{min-height:180px}
 #graficoProf div{min-width:0}
 #graficoLabels{font-weight:500}
-
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
 .modal .box{background:#fff;border-radius:18px;padding:20px;width:420px;max-width:100%}
 .modal .box input{width:100%;padding:12px;margin-bottom:10px;border:1px solid #E5DCCB;border-radius:11px}
 .badge-ok{background:#1E7A46;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
 .badge-off{background:#C0392B;color:#fff;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
 .footer{text-align:center;color:#A99A85;font-size:12px;padding:18px}
+/* ===== TEMA PRETO / BRANCO ===== */
+.btn-tema{background:#111 !important;color:#fff !important;border:none !important;padding:9px 14px !important;border-radius:999px !important;font-weight:700 !important;cursor:pointer !important;font-size:13px !important;white-space:nowrap}
+body.tema-preto{background:#0F1115 !important;color:#F3F4F6 !important}
+body.tema-preto .login-right{background:#0F1115 !important}
+body.tema-preto .login-box h2, body.tema-preto .login-box .sub{color:#fff !important}
+body.tema-preto .login-box input, body.tema-preto .login-box select{background:#1A1D24 !important;color:#fff !important;border-color:#333 !important}
+body.tema-preto .tabs2{background:#1A1D24 !important}
+body.tema-preto .topbar{background:#14171D !important;border-color:#222 !important;color:#fff !important}
+body.tema-preto .brand small{color:#9CA3AF !important}
+body.tema-preto .sidebar{background:#14171D !important;border-right:1px solid #222}
+body.tema-preto .kpi-novo, body.tema-preto .card-novo{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important;box-shadow:none !important}
+body.tema-preto .kpi-novo b, body.tema-preto .kpi-novo b small, body.tema-preto .card-novo h2, body.tema-preto .dash-head h1{color:#fff !important}
+body.tema-preto .kpi-novo .kpi-top, body.tema-preto .card-novo p, body.tema-preto .dash-head p, body.tema-preto .muted{color:#9CA3AF !important}
+body.tema-preto .card, body.tema-preto .prod-card, body.tema-preto .linha{background:#1A1D24 !important;border-color:#2A2E37 !important;color:#fff !important}
+body.tema-preto .card h2, body.tema-preto .card h3, body.tema-preto .prod-card b{color:#fff !important}
+body.tema-preto .card input, body.tema-preto .card select, body.tema-preto .modal .box input{background:#0F1115 !important;color:#fff !important;border-color:#333 !important}
+body.tema-preto .prod-card p{color:#9CA3AF !important}
+body.tema-preto .btn{background:#23272F !important;color:#fff !important;border-color:#333 !important}
+body.tema-preto .modal .box{background:#1A1D24 !important;color:#fff !important}
+body.tema-preto .footer{color:#888 !important}
+body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
+body.tema-preto #graficoLabels{color:#fff !important}
