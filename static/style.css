@@ -31,7 +31,6 @@ input,select{width:100%;padding:12px;border:1px solid #E3D9C8;border-radius:12px
 .btn-red{background:#E74C3C;color:#fff}
 .btn-dark{background:#111;color:#fff}
 .btn{background:#EFE6D6;color:#2B1A0A}
-.btn-tema{background:#111;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 .msg{color:#C0392B;font-size:13px;text-align:center;min-height:18px}
 .welcome{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;background:#F7F2E9;padding:20px}
 .welcome img{width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid #E8B84B}
@@ -46,7 +45,7 @@ input,select{width:100%;padding:12px;border:1px solid #E3D9C8;border-radius:12px
 .layout{display:flex;min-height:calc(100vh - 62px)}
 .sidebar{width:250px;background:#1F150C;color:#fff;padding:16px;flex-shrink:0}
 .sidebar h4{color:#E8B84B;font-size:12px;letter-spacing:1px;margin:18px 0 8px}
-.sidebar button{display:block;width:100%;text-align:left;background:transparent;color:#EDE3D3;border:1px solid #3A2C1A;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px;margin-bottom:6px}
+.sidebar button{display:block;width:100%;text-align:left;background:transparent;color:#EDE3D3;border:none;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px}
 .sidebar button.on,.sidebar button:hover{background:#E8B84B;color:#111;font-weight:700}
 .sidebar button.sair{color:#FF8A7A}
 .perfil{display:flex;gap:10px;align-items:center;background:#2A1D10;padding:10px;border-radius:12px}
@@ -90,7 +89,6 @@ body.tema-preto .dash-card-top{color:#9CA3AF!important}
 body.tema-preto .mini-box,body.tema-preto .prod-card,body.tema-preto .linha{background:#0F1115!important;border-color:#333!important}
 body.tema-preto input,body.tema-preto select{background:#1A1D24!important;color:#fff!important;border-color:#333!important}
 body.tema-preto .tabs2{background:#222!important}
-body.tema-preto .btn-tema{background:#fff!important;color:#111!important}
 #quemComprouGrid > div{ background:#FFFBF2!important; color:#111!important; }
 #quemComprouGrid b{ color:#111!important; }
 #quemComprouGrid small{ color:#555!important; }
@@ -99,14 +97,17 @@ body:not(.tema-preto) #graficoProf span{ color:#111!important; }
 body.tema-preto #graficoProf span{ color:#fff!important; }
 body:not(.tema-preto) #graficoLabels span{ color:#111!important; }
 body.tema-preto #graficoLabels span{ color:#fff!important; }
+/* --- NOVO v13: LIMPAR PARA VENDER --- */
 .limpar-box{background:#FDECEC!important;border:1px solid #F5C6C6!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-box b{color:#C0392B!important;font-size:15px!important}
 .limpar-box p{color:#555!important;font-size:13px!important;line-height:1.5!important}
 .limpar-box input{background:#fff!important;border:1px solid #F5C6C6!important}
+.limpar-box .btn-red{width:100%}
 #limparMsg{color:#2E9E5B!important;font-weight:800!important}
 body.tema-preto .limpar-box{background:#2A1A1A!important;border-color:#5C2A2A!important}
 body.tema-preto .limpar-box b{color:#FF8A7A!important}
 body.tema-preto .limpar-box p{color:#D9CFCF!important}
+/* --- NOVO v14: LIMPAR POR PARTES --- */
 .limpar-partes-box{background:#FFF8E1!important;border:1px solid #F5EEDD!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-partes-box b{color:#111!important;font-size:15px!important}
 .limpar-partes-box p{color:#555!important;font-size:13px!important;line-height:1.5!important}
@@ -115,5 +116,3 @@ body.tema-preto .limpar-box p{color:#D9CFCF!important}
 body.tema-preto .limpar-partes-box{background:#2A2410!important;border-color:#5C4A1A!important}
 body.tema-preto .limpar-partes-box b{color:#E8B84B!important}
 body.tema-preto .limpar-partes-box p{color:#D9CFCF!important}
-.label-campo{font-size:12px;font-weight:700;color:#555;margin:10px 0 2px;display:block}
-.preco-auto{background:#E8F5E9!important;border:1px solid #A5D6A7!important;padding:12px;border-radius:12px;font-weight:700;color:#111!important;margin:8px 0}
