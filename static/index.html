@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Padaria Jequessene</title>
+<title>Padaria</title>
 <script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
 <link rel="stylesheet" href="/static/style.css?v=21">
 <style>
@@ -142,7 +142,7 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
       </div>
       <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
       <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Cliente só vê e compra. Funcionário/Admin gerem produtos.</p><p id="avisoClienteProd" class="hidden" style="background:#FFF3CD;padding:12px;border-radius:10px;font-weight:700;color:#111">Como Cliente, tu só podes ver e comprar. Para encomendar, clica em Comprar no produto. Ganhas 1 ponto a cada 100 MT.</p><input id="pesquisaProd" placeholder="Pesquisar produto... Ex: Bolo de Chocolate" oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div>
-      <!-- V21 - FICHA TECNICA + INGREDIENTES -->
+      
       <div class="card ficha-box"><h3>📋 Ficha Técnica / Receita - Só Admin</h3><p class="muted">Escolhe o produto, mete os ingredientes e o sistema calcula o custo real.</p><select id="fichaProd"></select><div id="fichaItens"></div><div class="flex"><button class="btn btn-gold" onclick="addLinhaFicha()">+ Ingrediente</button><button class="btn btn-green" onclick="salvarFicha()">💾 Guardar Ficha</button></div><p id="fichaTotal" style="font-weight:800"></p></div>
       <div class="card"><h3>🥚 Stock de Ingredientes</h3><p class="muted">Controla farinha, açúcar, ovos - não só o produto final.</p><input id="ingNome" placeholder="Ex: Farinha"><input id="ingStock" type="number" placeholder="Stock"><input id="ingValidade" type="date"><button class="btn btn-gold" onclick="addIngrediente()">Adicionar Ingrediente</button><div id="listaIngredientes"></div></div>
       <div id="formAddProd"><h3>Adicionar / Editar - Só Funcionário / Admin</h3><p class="muted">Funcionário só pode mudar Stock e Validade. Preço e Custo só Admin.</p><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT - Só Admin"><input id="pCusto" type="number" placeholder="Custo MT - Só Admin"><input id="pStock" type="number" placeholder="Stock inicial"><input id="pValidade" type="date" placeholder="Validade"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div></div>
@@ -184,7 +184,7 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
       <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
     </main>
   </div>
-  <footer class="footer">Padaria Jequessene • Matola • © 2026 - v21 FINAL</footer>
+  <footer class="footer">Padaria • Matola • © 2026 </footer>
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto - aparece no Dashboard quando comprares</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
