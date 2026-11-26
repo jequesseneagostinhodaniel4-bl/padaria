@@ -31,7 +31,6 @@ input,select{width:100%;padding:12px;border:1px solid #E3D9C8;border-radius:12px
 .btn-red{background:#E74C3C;color:#fff}
 .btn-dark{background:#111;color:#fff}
 .btn{background:#EFE6D6;color:#2B1A0A}
-/* V16: Botao tema */
 .btn-tema{background:#111;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 .msg{color:#C0392B;font-size:13px;text-align:center;min-height:18px}
 .welcome{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;background:#F7F2E9;padding:20px}
@@ -100,7 +99,6 @@ body:not(.tema-preto) #graficoProf span{ color:#111!important; }
 body.tema-preto #graficoProf span{ color:#fff!important; }
 body:not(.tema-preto) #graficoLabels span{ color:#111!important; }
 body.tema-preto #graficoLabels span{ color:#fff!important; }
-/* --- NOVO v13: LIMPAR PARA VENDER --- */
 .limpar-box{background:#FDECEC!important;border:1px solid #F5C6C6!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-box b{color:#C0392B!important;font-size:15px!important}
 .limpar-box p{color:#555!important;font-size:13px!important;line-height:1.5!important}
@@ -110,7 +108,6 @@ body.tema-preto #graficoLabels span{ color:#fff!important; }
 body.tema-preto .limpar-box{background:#2A1A1A!important;border-color:#5C2A2A!important}
 body.tema-preto .limpar-box b{color:#FF8A7A!important}
 body.tema-preto .limpar-box p{color:#D9CFCF!important}
-/* --- NOVO v14: LIMPAR POR PARTES --- */
 .limpar-partes-box{background:#FFF8E1!important;border:1px solid #F5EEDD!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-partes-box b{color:#111!important;font-size:15px!important}
 .limpar-partes-box p{color:#555!important;font-size:13px!important;line-height:1.5!important}
@@ -119,7 +116,6 @@ body.tema-preto .limpar-box p{color:#D9CFCF!important}
 body.tema-preto .limpar-partes-box{background:#2A2410!important;border-color:#5C4A1A!important}
 body.tema-preto .limpar-partes-box b{color:#E8B84B!important}
 body.tema-preto .limpar-partes-box p{color:#D9CFCF!important}
-/* --- V16: ENCOMENDA CLARA + MINHAS ENCOMENDAS --- */
 .label-campo{font-size:12px;font-weight:700;color:#555;margin:12px 0 2px;display:block}
 .preco-auto{background:#E8F5E9!important;border:1px solid #A5D6A7!important;padding:12px;border-radius:12px;font-weight:700;color:#111!important;margin:8px 0}
 #listaMinhasEnc .linha{ background:#FFFBF2!important; color:#111!important; }
@@ -130,3 +126,35 @@ body.tema-preto .limpar-partes-box p{color:#D9CFCF!important}
 #listaEnc .linha small{ color:#555!important; }
 body.tema-preto .label-campo{color:#9CA3AF!important}
 body.tema-preto .preco-auto{background:#1A2A1A!important;border-color:#2E5A2E!important;color:#fff!important}
+/* ===== V19 FINAL - ADICIONADO POR MIM ===== */
+.zona-perigo{background:linear-gradient(180deg,#2A1D10 0%,#1F150C 100%);border:1px solid #3A2C1A;border-radius:20px;padding:20px;margin-top:18px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.zona-perigo-top{display:flex;gap:14px;align-items:flex-start}
+.zona-icone{width:52px;height:52px;flex-shrink:0;background:#E8B84B;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.zona-perigo-top b{font-size:17px;color:#fff}
+.zona-perigo-top p{margin:4px 0 0;color:#CFC3AE;font-size:13px;line-height:1.5}
+.badge-perigo{margin-left:auto;background:#E74C3C;color:#fff;font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.perigo-info{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;margin:16px 0 6px;font-size:13px;line-height:1.7;color:#EDE3D3}
+.perigo-info span{color:#E8B84B;font-weight:800}
+.zona-perigo .label-campo{color:#E8B84B;margin-top:14px}
+.zona-perigo input{background:#fff!important;color:#111!important;border:2px solid #E8B84B!important;padding:14px;border-radius:14px;font-size:15px;font-weight:600}
+.zona-perigo input::placeholder{color:#999;font-weight:400}
+.perigo-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn-perigo-main{flex:2;min-width:220px;background:#E74C3C;color:#fff;border:none;padding:15px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 6px 16px rgba(231,76,60,.35)}
+.btn-perigo-main:hover{background:#C0392B}
+.btn-perigo-soft{flex:1;min-width:180px;background:#fff;color:#111;border:none;padding:15px;border-radius:14px;font-weight:700;font-size:14px;cursor:pointer}
+.msg-ok{color:#2ECC71!important;font-weight:800;font-size:13px;min-height:18px;margin:10px 0 0}
+.limpar-partes-v18{background:#FFFBF2;border-radius:16px;padding:16px;margin-top:16px;color:#111}
+.partes-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.partes-head b{font-size:15px}
+.partes-head small{color:#8A7A68}
+.partes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.btn-parte{background:#fff;border:1px solid #F5EEDD;border-radius:14px;padding:14px 10px;cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;color:#111}
+.btn-parte:hover{border-color:#E8B84B;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+.parte-ico{font-size:22px}
+.btn-parte b{font-size:13px}
+.btn-parte small{color:#8A7A68;font-size:11px}
+#listaPedidosEnc .linha{ background:#FFFBF2!important; color:#111!important; }
+#listaPedidosEnc .linha b{ color:#111!important; }
+#listaPedidosEnc .linha small{ color:#555!important; }
+.limpar-box,.limpar-partes-box{display:none!important}
+@media(max-width:700px){.partes-grid{grid-template-columns:1fr}.perigo-btns{flex-direction:column}.badge-perigo{display:none}}
