@@ -15,7 +15,7 @@ from sqlalchemy import create_engine, String, Integer, DateTime, Text, Boolean, 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, Session
 from fpdf import FPDF
 import openpyxl
-SECRET = os.getenv("SECRET_KEY", "PADARIA_JEQUESSENE_2026")
+SECRET = os.getenv("SECRET_KEY", "PADARIA_2026")
 DBURL = os.getenv("DATABASE_URL", "sqlite:///./padaria.db")
 if DBURL.startswith("postgres://"): DBURL = DBURL.replace("postgres://", "postgresql://", 1)
 engine = create_engine(DBURL, connect_args={"check_same_thread": False} if DBURL.startswith("sqlite") else {}, pool_pre_ping=True)
@@ -233,13 +233,13 @@ def admin_only(u: User = Depends(current_user)):
 def funcionario_only(u: User = Depends(current_user)):
     if not is_funcionario(u): raise HTTPException(403, "Como Cliente não podes ver o Dashboard / Vendas da padaria. Vê só Produtos e Encomendas.")
     return u
-app = FastAPI(title="PADARIA JEQUESSENE")
+app = FastAPI(title="PADARIA")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 def home(): return open("static/index.html", encoding="utf-8").read()
 @app.get("/api/health")
-def health(): return {"status": "ok", "app": "PADARIA JEQUESSENE"}
+def health(): return {"status": "ok", "app": "PADARIA"}
 class Register(BaseModel):
     nome: str; telefone: str; idade: int = 18; email: str = ""; foto: str = ""; pais: str = "Moçambique"; bairro: str = "Matola"; tipo: str = "Cliente"; password: str
 class Login(BaseModel):
