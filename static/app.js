@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - v16 - CLIENTE SEM DASHBOARD + ENCOMENDA SEPARADA + SEM PRECO
+// PADARIA JEQUESSENE - v19 FINAL - SÓ CLIENTE ENCOMENDA + PEDIDOS PARA FUNC/ADMIN
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
@@ -11,16 +11,22 @@ async function api(u,m,b){ const r=await fetch(u,{method:m||'GET',headers:H(),bo
 function val(id){ const el=document.getElementById(id); return el?el.value:''; }
 function esc(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 function toast(m){ let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1F150C;color:#fff;padding:12px 20px;border-radius:999px;z-index:9999;font-weight:700'; document.body.appendChild(t);} t.innerText=m; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2600); }
-// V16: TRAVA TOTAL - Cliente nao abre Dashboard/Vendas/Stock/Dividas/Admin
+// V19: TRAVA TOTAL DOS DOIS LADOS
 function mostrarSec(id, btn){
+  if(ME && (ME.is_admin || ME.tipo==='Funcionário')){
+    if(id==='encomendasSec' || id==='minhasEncomendasSec'){
+      alert('Admin / Funcionário não faz encomenda. Vê em Pedidos de Encomendas.');
+      id='pedidosSec'; btn=document.querySelector('[data-sec="pedidosSec"]');
+    }
+  }
   if(ME && ME.tipo==='Cliente' && !ME.is_admin){
-    const proibido=['dashSec','vendasSec','stockSec','dividasSec','adminSec','pessoasSec','fornecedorSec','historicoSec'];
+    const proibido=['dashSec','vendasSec','stockSec','dividasSec','adminSec','pessoasSec','fornecedorSec','historicoSec','pedidosSec'];
     if(proibido.includes(id)){
       alert('Como Cliente só podes ver Produtos e Encomendas.');
       id='produtosSec'; btn=document.querySelector('[data-sec="produtosSec"]');
     }
   }
-  ['dashSec','pessoasSec','produtosSec','vendasSec','stockSec','fornecedorSec','encomendasSec','minhasEncomendasSec','dividasSec','adminSec','historicoSec'].forEach(s=>{ const el=document.getElementById(s); if(el) el.classList.add('hidden'); });
+  ['dashSec','pessoasSec','produtosSec','vendasSec','stockSec','fornecedorSec','encomendasSec','minhasEncomendasSec','pedidosSec','dividasSec','adminSec','historicoSec'].forEach(s=>{ const el=document.getElementById(s); if(el) el.classList.add('hidden'); });
   const target=document.getElementById(id); if(target) target.classList.remove('hidden');
   document.querySelectorAll('.sidebar button[data-sec]').forEach(b=>b.classList.remove('on'));
   if(btn) btn.classList.add('on');
@@ -62,7 +68,6 @@ function desenharGraficoProf(dados){
   const avatar = document.getElementById('dashAvatar'); if(avatar && ME?.foto) avatar.src = ME.foto;
 }
 function avatarCliente(foto, nome){ if(foto) return `<img src="${foto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #E8B84B">`; const ini=(nome||'?').trim().charAt(0).toUpperCase(); return `<div style="width:52px;height:52px;border-radius:50%;background:#8A5A12;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;flex-shrink:0">${ini}</div>`; }
-// V16: Preco AUTOMATICO - Cliente nao escreve preco
 function atualizarPrecoEncomenda(){
   const nome = val('eTipo'); const p = PRODS.find(x=>x.nome===nome);
   const box = document.getElementById('precoEncomendaBox'); if(!box) return;
@@ -70,12 +75,17 @@ function atualizarPrecoEncomenda(){
   else box.innerText = 'Preço: escolhe um produto para ver o preço';
 }
 window.atualizarPrecoEncomenda = atualizarPrecoEncomenda;
-// V16: Apaga botoes proibidos do menu do Cliente
+// V19: Apaga botoes que não são para aquele tipo
 function aplicarPermissoesCliente(){
-  if(!ME || ME.tipo!=='Cliente' || ME.is_admin) return;
-  document.querySelectorAll('button[data-so-func="1"]').forEach(b=>b.remove());
-  document.querySelectorAll('#menuGestao button, #tituloGestao').forEach(el=>el.remove());
-  const a=document.getElementById('avisoPerm'); if(a){ a.classList.remove('hidden'); a.innerText='Como Cliente só podes ver produtos e encomendar.'; }
+  if(!ME) return;
+  const isCliente = ME.tipo==='Cliente' && !ME.is_admin;
+  if(isCliente){
+    document.querySelectorAll('button[data-so-func="1"]').forEach(b=>b.remove());
+    document.querySelectorAll('#menuGestao button, #tituloGestao').forEach(el=>el.remove());
+    const a=document.getElementById('avisoPerm'); if(a){ a.classList.remove('hidden'); a.innerText='Como Cliente só podes ver produtos e encomendar.'; }
+  } else {
+    document.querySelectorAll('button[data-so-cliente="1"]').forEach(b=>b.remove());
+  }
 }
 async function carregarDados(){
   if(!token) return; aplicarTema();
@@ -86,7 +96,6 @@ async function carregarDados(){
   document.getElementById('saudacao').innerText='Olá, '+ME.nome; document.getElementById('infoUser').innerText=ME.tipo+' • '+ME.telefone;
   const foto=ME.foto||''; if(foto){ document.getElementById('meuAvatar').src=foto; document.getElementById('sideFoto').src=foto; }
   const isAdmin=ME.is_admin; const isFunc=ME.tipo==='Funcionário'; const isCliente=ME.tipo==='Cliente' && !ME.is_admin;
-  // V16: Cliente - apaga menu proibido logo no inicio
   aplicarPermissoesCliente();
   document.querySelectorAll('#menuGestao button, #tituloGestao').forEach(el=>{ if(!isCliente) el.style.display = isAdmin ? '' : 'none'; });
   const formAdd = document.getElementById('formAddProd'); if(formAdd) formAdd.style.display = isCliente ? 'none' : '';
@@ -94,7 +103,6 @@ async function carregarDados(){
   if(isCliente){ mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); }
   else if(isFunc){ mostrarSec('vendasSec', document.querySelector('[data-sec="vendasSec"]')); }
   else { mostrarSec('dashSec', document.querySelector('[data-sec="dashSec"]')); }
-  // V16: Dashboard SO para Func/Admin - Cliente NUNCA chama /api/dashboard
   if(!isCliente){
     try{
       const dash=await api('/api/dashboard'); window._mesVendas = dash.mes.vendas; if(dash.meta) window._metaObjetivo = dash.meta.objetivo;
@@ -127,7 +135,6 @@ async function carregarDados(){
     const al=document.getElementById('alertaStock'); if(al) al.innerText=PRODS.filter(p=>p.stock<=5).map(p=>p.nome).join(', ')||'Stock OK';
   }catch(e){}
   try{ if(isAdmin){ const pessoas=await api('/api/pessoas'); document.getElementById('listaPessoas').innerHTML=pessoas.map(p=>{ const ativo=p.active!==false; const bot= isAdmin && p.id!==ME.id ? (ativo?`<button class="btn btn-red" onclick="demitirPessoa(${p.id},'${esc(p.nome)}')">Demitir</button>`:`<button class="btn btn-green" onclick="reativarPessoa(${p.id},'${esc(p.nome)}')">Reativar</button>`) : ''; return `<div class="linha" style="background:#FFFBF2!important;color:#111!important">${p.foto?`<img src="${p.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`:''}<b style="color:#111!important">${p.nome}</b> - ${p.telefone} - ${p.tipo} ${ativo?'<span class="badge-ok">Ativo</span>':'<span class="badge-off">DEMITIDO</span>'} ${bot}</div>`; }).join(''); const lt=document.getElementById('listaTroca'); if(lt) lt.innerHTML=pessoas.map(p=>`<button class="btn" onclick="document.getElementById('trocaTel').value='${p.telefone}'">${p.nome} - ${p.telefone}</button>`).join(''); } }catch(e){}
-  // V16: Financeiro SO para Func/Admin
   if(!isCliente){
     try{
       const fin=await api('/api/financeiro');
@@ -139,10 +146,10 @@ async function carregarDados(){
   }
   try{
     const enc=await api('/api/encomendas'); const isFuncOuAdmin = isAdmin || isFunc;
-    // V16: Renderiza a MESMA lista em 2 lugares: Minhas Encomendas (principal) + listaEnc (compat escondida)
     const htmlEnc = enc.map(e=>{ const estrelas = e.avaliacao ? '⭐'.repeat(e.avaliacao) : ''; const pontoTxt = e.ponto ? `<p style="background:#FFF8E1;padding:8px;border-radius:8px;color:#111!important">💬 <b style="color:#111!important">Ponto:</b> ${e.ponto} ${estrelas}</p>` : '<p style="color:#888;font-size:12px">Sem ponto ainda</p>'; const btnEntregar = (isFuncOuAdmin && e.estado!=='Entregue') ? `<button class="btn btn-green" onclick="entregarEnc(${e.id})">✅ Entregar e virar Venda</button>` : ''; return `<div class="linha" style="background:#FFFBF2!important;color:#111!important"><div style="display:flex;gap:10px;align-items:center">${avatarCliente(e.cliente_foto,e.cliente)}<div style="color:#111!important"><b style="color:#111!important">${e.cliente}</b> (${e.telefone}) - <b style="color:#111!important">${e.tipo}</b> - ${e.preco} MT - Entrega: ${e.data_entrega||'-'} - <b style="color:#111!important">${e.estado}</b><br><small style="color:#555!important">Criado por: ${e.criado_por||e.cliente} • Pagamento: ${e.sinal} • Obs: ${e.obs||'-'}</small></div></div>${pontoTxt}<div class="flex" style="margin-top:8px">${btnEntregar}<button class="btn" onclick="deixarPonto(${e.id})">💬 Deixar meu ponto</button></div></div>`; }).join('') || 'Ainda não tens encomendas. Faz a primeira!';
     const minhas=document.getElementById('listaMinhasEnc'); if(minhas) minhas.innerHTML=htmlEnc;
     const antiga=document.getElementById('listaEnc'); if(antiga) antiga.innerHTML=htmlEnc;
+    const pedidos=document.getElementById('listaPedidosEnc'); if(pedidos) pedidos.innerHTML=htmlEnc;
     if(!isCliente){
       const fin2 = await api('/api/financeiro').catch(()=>null); if(fin2){ const vendasEnc = fin2.vendas.filter(v=>v.pagamento==='Encomenda'); const el=document.getElementById('listaEncVendas'); if(el) el.innerHTML = vendasEnc.map(v=>`<div class="linha" style="background:#FFFBF2!important;color:#111!important">✅ <b style="color:#111!important">${v.produto}</b> - ${v.cliente} - ${v.total} MT - ${v.data}</div>`).join('') || 'Ainda nenhuma encomenda entregue.'; }
     }
@@ -157,8 +164,9 @@ async function addVenda(){ try{ const d=await api('/api/vendas','POST',{produto_
 async function addDespesa(){ try{ await api('/api/despesas','POST',{descricao:val('sDesc'),valor:parseFloat(val('sValor')||0),categoria:val('sCat')}); toast('Despesa registada'); carregarDados(); }catch(e){ alert(e.message); } }
 async function addForn(){ try{ await api('/api/fornecedores','POST',{nome:val('fNome'),telefone:val('fTel'),produto:val('fProd'),preco:parseFloat(val('fPreco')||0),localizacao:val('fLocal')}); toast('Fornecedor adicionado'); carregarDados(); }catch(e){ alert(e.message); } }
 async function addCompra(){ try{ const d=await api('/api/compras','POST',{fornecedor_id:parseInt(val('cForn')),produto:val('cProd'),qtd:parseInt(val('cQtd')||1),preco_unitario:parseFloat(val('cPreco')||0),pagamento:val('cPag')}); toast('Compra registada • '+d.total+' MT'); if(confirm('Compra registada • '+d.total+' MT\nQueres baixar o recibo da compra?')){ baixarReciboCompra(d.compra_id); } carregarDados(); }catch(e){ alert(e.message); } }
-// V16: addEnc SEM preco - preco vem do servidor
-async function addEnc(){ try{ const nomeProd=val('eTipo'); if(!nomeProd) return alert('Escolhe um produto primeiro.'); const p=PRODS.find(x=>x.nome===nomeProd); const preco=p?p.preco:0; await api('/api/encomendas','POST',{cliente:val('eCliente')||ME.nome,telefone:val('eTel')||ME.telefone,tipo:nomeProd,data_entrega:val('eData'),preco:preco,sinal:val('eSinal'),obs:val('eObs')}); toast('Encomenda guardada! Vê em Minhas Encomendas.'); mostrarSec('minhasEncomendasSec', document.querySelector('[data-sec="minhasEncomendasSec"]')); carregarDados(); }catch(e){ alert(e.message); } }
+async function addEnc(){
+  if(ME && (ME.is_admin || ME.tipo==='Funcionário')){ alert('Admin / Funcionário não pode fazer encomenda. Só o Cliente encomenda.'); return; }
+  try{ const nomeProd=val('eTipo'); if(!nomeProd) return alert('Escolhe um produto primeiro.'); const p=PRODS.find(x=>x.nome===nomeProd); const preco=p?p.preco:0; await api('/api/encomendas','POST',{cliente:val('eCliente')||ME.nome,telefone:val('eTel')||ME.telefone,tipo:nomeProd,data_entrega:val('eData'),preco:preco,sinal:val('eSinal'),obs:val('eObs')}); toast('Encomenda guardada! Vê em Minhas Encomendas.'); mostrarSec('minhasEncomendasSec', document.querySelector('[data-sec="minhasEncomendasSec"]')); carregarDados(); }catch(e){ alert(e.message); } }
 async function entregarEnc(id){ if(!confirm('Entregar? Vai virar Venda automaticamente.')) return; try{ await api('/api/encomendas/'+id+'/entregar','POST',{}); toast('Entregue e virou Venda!'); carregarDados(); }catch(e){ alert(e.message); } }
 async function deixarPonto(id){ const ponto=prompt('Deixa o teu ponto / comentário sobre a encomenda:'); if(ponto===null) return; const av=parseInt(prompt('Nota de 1 a 5 (opcional):')||'0'); try{ await api('/api/encomendas/'+id+'/ponto','POST',{ponto:ponto,avaliacao:av}); toast('Ponto guardado!'); carregarDados(); }catch(e){ alert(e.message); } }
 async function carregarPainelAdmin(){ try{ const d=await api('/api/admin/painel'); document.getElementById('adminResumo').innerHTML=`<p>Vendas: ${d.resumo.total_vendas} MT • Lucro líquido: ${d.resumo.lucro_liquido_final} MT • Dívidas: ${d.resumo.dividas} MT</p>`; document.getElementById('adminVendas').innerHTML='<h3>Últimas vendas</h3>'+d.ultimas_vendas.map(v=>`<div class="linha" style="background:#FFFBF2!important;color:#111!important">${v.data} ${v.hora} - ${v.produto} x${v.qtd} = ${v.total} MT - ${v.vendedor} <button class="btn" onclick="baixarReciboVenda(${v.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminCompras').innerHTML='<h3>Últimas compras</h3>'+d.ultimas_compras.map(c=>`<div class="linha" style="background:#FFFBF2!important;color:#111!important">${c.data} - ${c.produto} x${c.qtd} = ${c.total} MT <button class="btn" onclick="baixarReciboCompra(${c.id})">🧾 Recibo</button></div>`).join(''); document.getElementById('adminFluxo').innerHTML='<h3>Quem fez o quê</h3>'+d.fluxo.map(l=>`<div class="linha" style="background:#FFFBF2!important;color:#111!important">${l.data} - ${l.quem} - ${l.acao} - ${l.detalhe}</div>`).join(''); }catch(e){ alert(e.message); } }
