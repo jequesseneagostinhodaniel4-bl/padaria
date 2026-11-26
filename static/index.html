@@ -1,1 +1,125 @@
-
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Padaria Jequessene</title>
+<script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
+<link rel="stylesheet" href="/static/style.css?v=15">
+<style>
+.dash-card{background:#fff!important;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);color:#111!important}
+.limpar-box{background:#FDECEC!important;border:1px solid #F5C6C6!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
+.limpar-partes-box{background:#FFF8E1!important;border:1px solid #F5EEDD!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
+.preco-auto{background:#E8F5E9!important;border:1px solid #A5D6A7!important;padding:12px;border-radius:12px;font-weight:700;color:#111!important}
+.label-campo{font-size:12px;font-weight:700;color:#555;margin:10px 0 2px;display:block}
+</style>
+</head>
+<body>
+<script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); } }catch(e){}</script>
+<div id="loginPage" class="login-page">
+  <div class="login-left"><img class="bg" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1400"><div class="shade"></div><div class="txt"><h1>Padaria<br><i>Jequessene</i></h1><p>Pão fresco, bolos e pastéis feitos todos os dias em Matola.</p><span class="tag">M-Pesa • e-Mola • WhatsApp • Recibos</span></div></div>
+  <div class="login-right"><div class="login-box">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button id="btn-tema-login" class="btn-tema" onclick="if(window.mudarTema){mudarTema()}else{document.body.classList.toggle('tema-preto')}">🌙 Preto</button></div>
+    <div class="login-logo">J</div><h2>PADARIA</h2><p class="sub">Gestão Comercial • Matola, Moçambique</p><p class="date" id="dataHoje"></p>
+    <div class="tabs2"><button id="tabLogin" class="on" onclick="mostrarLogin()">Entrar</button><button id="tabRegisto" onclick="mostrarRegisto()">Criar conta</button></div>
+    <div id="formLogin"><input id="loginTel" placeholder="Teu telefone • ex: 840000000" inputmode="numeric"><div class="pass"><input id="loginSenha" type="password" placeholder="Tua senha"><button type="button" onclick="mostrarSenha('loginSenha',this)">Ver</button></div><button class="btn-main" onclick="login()">Entrar</button><p class="msg" id="authMsg"></p></div>
+    <div id="formRegistar" class="hidden"><input id="rNome" placeholder="Nome completo"><input id="rTel" placeholder="Telefone • ex: 841234567" inputmode="numeric"><input id="rIdade" type="number" placeholder="Idade"><input id="rEmail" type="email" placeholder="Email (opcional)"><input id="rBairro" placeholder="Bairro • ex: Matola"><select id="rTipo"><option>Cliente</option><option>Funcionário</option></select><div class="pass"><input id="rSenha" type="password" placeholder="Cria uma senha"><button type="button" onclick="mostrarSenha('rSenha',this)">Ver</button></div><button class="btn-gold" onclick="registar()">Criar conta</button><p class="msg" id="authMsg2"></p></div>
+  </div></div>
+</div>
+<div id="welcome" class="welcome hidden"><div><img id="welcomeFoto" src=""><h1 id="welcomeNome">Bem-vindo!</h1><p id="welcomeTexto">Bom trabalho hoje.</p><br><button onclick="entrarSistema()">Entrar no sistema →</button></div></div>
+<div id="app" class="hidden">
+  <header class="topbar"><div class="brand"><div class="brand-logo">J</div><div><b>Padaria Jequessene</b><small>Matola • <span id="dataTop"></span></small></div></div><div class="top-actions"><button id="btn-tema" class="btn-tema" onclick="mudarTema()">🌙 Preto</button><button class="btn" onclick="toggleMenu()">Menu</button><img id="meuAvatar" class="avatar-top" src="" onclick="abrirPerfil()"><button class="btn btn-dark" onclick="abrirPerfil()">Meu perfil</button><button class="btn" onclick="sair()">Sair</button></div></header>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="perfil"><img id="sideFoto" src=""><div><b id="saudacao">Olá</b><br><small id="infoUser" style="color:#CFC3AE"></small></div></div>
+      <p id="avisoPerm" class="danger hidden"></p>
+      <h4>Operação</h4>
+      <div id="menuOperacao">
+        <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)">Dashboard</button>
+        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">Vender</button>
+        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">Comprar / Fornecedor</button>
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">Fazer Encomenda</button>
+        <button data-sec="minhasEncomendasSec" onclick="mostrarSec('minhasEncomendasSec',this)">🛒 Minhas Encomendas</button>
+        <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">Produtos</button>
+        <button data-sec="stockSec" onclick="mostrarSec('stockSec',this)">Stock</button>
+        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">Dívidas</button>
+      </div>
+      <h4 id="tituloGestao">Gestão</h4>
+      <div id="menuGestao"><button data-sec="pessoasSec" onclick="mostrarSec('pessoasSec',this)">Pessoas</button><button data-sec="adminSec" onclick="mostrarSec('adminSec',this)">Painel Admin</button></div>
+      <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
+    </aside>
+    <main class="main">
+      <div id="dashSec">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><b style="font-size:20px">📊 Dashboard</b><img id="dashAvatar" src="" style="width:38px;height:38px;border-radius:50%;object-fit:cover"></div>
+        <div class="dash-grid-top" style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px">
+          <div class="dash-card"><span>💰 Total Vendas</span><h1 id="tVendas">0 MT</h1><div style="display:flex;gap:8px"><button class="btn btn-dark" onclick="mostrarSec('vendasSec',document.querySelector('[data-sec=vendasSec]'))">+ Vender</button><button class="btn" onclick="fechoDia()">🧾 Fecho</button><button class="btn" onclick="exportarExcel()">↓ Exportar</button></div><div id="miniBarras" style="display:flex;align-items:flex-end;gap:4px;height:70px"></div></div>
+          <div class="dash-card"><span>🟢 Lucro</span><h1 id="tLucro">0 MT</h1><p>Hoje: <b id="dashHojeValor">0 MT</b> • Mês: <b id="dashMesValor">0 MT</b></p></div>
+          <div class="dash-card"><span>🔴 Dívidas</span><h1 id="tDividas" style="color:#E74C3C">0 MT</h1><button class="btn btn-red" onclick="mostrarSec('dividasSec',document.querySelector('[data-sec=dividasSec]'))">Ver Dívidas →</button></div>
+        </div>
+        <div class="dash-grid-bottom" style="display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:14px">
+          <div class="dash-card"><b>🎯 Meta do Mês</b><p>Vendas mês: <b id="metaVendas">0 MT</b> - <span id="metaPct">0%</span></p><div style="height:6px;background:#EEE;border-radius:99px;overflow:hidden"><div id="metaBar1" style="height:100%;background:#111;width:0%"></div></div><p>Clientes: <b id="tClientes">0</b></p><p id="dashHoje"></p><b>Mais vendidos</b><div id="maisVendidosGrid"></div></div>
+          <div class="dash-card"><b>📈 Vendas da Semana</b> - <span id="semanaTxt">Semana</span><p id="resumoSemanaTxt">A carregar...</p><div id="graficoProf" style="display:flex;align-items:flex-end;gap:14px;height:180px"></div><div id="graficoLabels" style="display:flex;gap:14px"></div><div style="display:flex;gap:10px;margin-top:14px"><div class="mini-box"><small>Por pagamento</small><div id="porPag"></div></div><div class="mini-box"><small>Lista</small><div id="maisVendidos"></div></div></div></div>
+        </div>
+        <div class="dash-card" style="margin-top:14px"><b>👥 Quem comprou</b><div id="quemComprouGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px"></div></div>
+        <div class="dash-card" style="margin-top:14px"><b>⭐ Vendas de Encomendas Entregues</b><div id="listaEncVendasDash" style="margin-top:12px"></div></div>
+      </div>
+      <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><div id="listaPessoas"></div></div>
+      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p id="avisoClienteProd" class="hidden" style="background:#FFF3CD;padding:12px;border-radius:10px;font-weight:700;color:#111">Como Cliente, tu só podes ver e comprar.</p><input id="pesquisaProd" placeholder="Pesquisar produto... Ex: Bolo de Chocolate" oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><div id="formAddProd"><h3>Adicionar / Editar - Só Funcionário / Admin</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label>Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div></div>
+      <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
+      <div id="stockSec" class="card hidden"><h2>Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
+      <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
+      <div id="encomendasSec" class="card hidden">
+        <button class="btn" onclick="mostrarSec('produtosSec',document.querySelector('[data-sec=produtosSec]'))">← Voltar para Produtos</button>
+        <h2>📦 Fazer Encomenda</h2><p class="muted">Escolhe o produto, personaliza e escolhe quando queres receber.</p>
+        <span class="label-campo">1. Teu nome</span><input id="eCliente" placeholder="Ex: Maria dos Santos">
+        <span class="label-campo">2. Teu telefone</span><input id="eTel" placeholder="Ex: 841234567">
+        <span class="label-campo">3. O que queres encomendar?</span><select id="eTipo" onchange="atualizarPrecoEncomenda()"><option value="">Escolhe um produto...</option></select>
+        <div id="precoEncomendaBox" class="preco-auto">Preço: escolhe um produto para ver o preço</div>
+        <span class="label-campo">4. Quando queres receber? 📅</span><input id="eData" type="date">
+        <small style="color:#888">Ex: se queres para sábado, escolhe a data de sábado.</small>
+        <span class="label-campo">5. Como vais pagar?</span>
+        <select id="eSinal">
+          <option value="Sem Sinal">Ainda não paguei - Vou pagar na entrega</option>
+          <option value="Sinal 50%">Vou pagar 50% agora (sinal) e resto na entrega</option>
+          <option value="Pago Total">Já paguei tudo</option>
+        </select>
+        <span class="label-campo">6. Como queres o teu bolo / pão? Personaliza aqui 🎂</span>
+        <input id="eObs" placeholder="Ex: Bolo rosa, 2 andares, com nome Maria, sem amendoim...">
+        <small style="color:#888">Se personalizares muito, a Padaria pode ajustar o preço e vai te avisar no WhatsApp.</small>
+        <br><br><button class="btn btn-gold" onclick="addEnc()">✅ Confirmar Encomenda</button>
+        <button class="btn" onclick="mostrarSec('minhasEncomendasSec',document.querySelector('[data-sec=minhasEncomendasSec]'))">Ver Minhas Encomendas →</button>
+      </div>
+      <div id="minhasEncomendasSec" class="card hidden">
+        <button class="btn" onclick="mostrarSec('produtosSec',document.querySelector('[data-sec=produtosSec]'))">← Voltar para Produtos</button>
+        <h2>🛒 Minhas Encomendas</h2><p class="muted">Aqui vês tudo o que já pediste, se já pagaste e se já foi entregue.</p>
+        <div id="listaMinhasEnc"></div>
+        <h3>⭐ Vendas de Encomendas Entregues</h3><div id="listaEncVendas"></div>
+        <button class="btn btn-gold" onclick="mostrarSec('encomendasSec',document.querySelector('[data-sec=encomendasSec]'))">+ Fazer nova encomenda</button>
+      </div>
+      <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
+      <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div>
+      <div class="limpar-box"><b>🧹 Limpar Sistema para Vender</b><p>Apaga vendas, compras, despesas, encomendas e pessoas de teste.</p><input id="limparConfirmar" placeholder="Escreve LIMPAR para confirmar"><input id="limparSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-red" onclick="limparSistema()">🧹 Limpar TUDO</button><button class="btn" onclick="limparSoVendas()">Só limpar Vendas</button></div><p id="limparMsg"></p></div>
+      <div class="limpar-partes-box"><b>🧹 Limpar por partes</b><p>Usa os 2 campos lá em cima: LIMPAR + senha</p><div class="flex"><button class="btn btn-orange" onclick="limparUltimasVendas()">🗑️ Limpar Últimas Vendas</button><button class="btn btn-gold" onclick="limparUltimasCompras()">🗑️ Limpar Últimas Compras</button><button class="btn" onclick="limparFluxo()">🗑️ Limpar Quem fez o quê</button></div><p id="limparPartesMsg"></p></div>
+      </div>
+      <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
+    </main>
+  </div>
+  <footer class="footer">Padaria Jequessene • Matola • © 2026</footer>
+</div>
+<div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
+<div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
+<script src="/static/app.js?v=15"></script>
+<script>
+if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); }
+document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
+document.getElementById('dataTop').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+function mostrarSenha(id,btn){var el=document.getElementById(id);if(el.type==='password'){el.type='text';btn.innerText='Esconder'}else{el.type='password';btn.innerText='Ver'}}
+function mostrarLogin(){document.getElementById('formLogin').classList.remove('hidden');document.getElementById('formRegistar').classList.add('hidden');document.getElementById('tabLogin').classList.add('on');document.getElementById('tabRegisto').classList.remove('on')}
+function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
+function entrarSistema(){ var w=document.getElementById('welcome'); w.classList.add('hidden'); w.style.display='none'; w.style.visibility='hidden'; document.getElementById('app').classList.remove('hidden'); document.getElementById('app').style.display='block'; carregarDados(); }
+window.addEventListener('popstate', function(e){ e.preventDefault(); mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); });
+history.pushState({page:'app'}, '', location.href);
+</script>
+</body>
+</html>
