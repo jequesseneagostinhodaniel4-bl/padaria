@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
 <script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
-<link rel="stylesheet" href="/static/style.css?v=13">
+<link rel="stylesheet" href="/static/style.css?v=14">
 <style>
 .dash-card{background:#fff!important;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);color:#111!important}
 .dash-card h1, .dash-card b{color:#111!important}
@@ -83,6 +83,9 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
 .limpar-box{background:#FDECEC!important;border:1px solid #F5C6C6!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-box b{color:#C0392B!important}
 .limpar-box p{color:#555!important;font-size:13px!important}
+.limpar-partes-box{background:#FFF8E1!important;border:1px solid #F5EEDD!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
+.limpar-partes-box b{color:#111!important}
+.limpar-partes-box p{color:#555!important;font-size:13px!important}
 </style>
 </head>
 <body>
@@ -142,6 +145,7 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
       <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
       <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div>
       <div class="limpar-box"><b>🧹 Limpar Sistema para Vender</b><p>Apaga vendas, compras, despesas, encomendas e pessoas de teste. Mantém produtos e Admin. Não dá para voltar atrás!</p><input id="limparConfirmar" placeholder="Escreve LIMPAR para confirmar"><input id="limparSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-red" onclick="limparSistema()">🧹 Limpar TUDO para Vender</button><button class="btn" onclick="limparSoVendas()">Só limpar Vendas / Histórico</button></div><p id="limparMsg" style="font-weight:700"></p></div>
+      <div class="limpar-partes-box"><b>🧹 Limpar por partes - Painel Admin</b><p>Usa os mesmos 2 campos lá em cima: escreve LIMPAR + tua senha de Admin, depois clica num destes:</p><div class="flex"><button class="btn btn-orange" onclick="limparUltimasVendas()">🗑️ Limpar Últimas Vendas</button><button class="btn btn-gold" onclick="limparUltimasCompras()">🗑️ Limpar Últimas Compras</button><button class="btn" onclick="limparFluxo()">🗑️ Limpar Quem fez o quê</button></div><p id="limparPartesMsg" style="font-weight:700;font-size:13px"></p></div>
       </div>
       <div id="historicoSec" class="card hidden"><h2>Histórico</h2><div id="listaVendas"></div><div id="listaDespesas"></div></div>
     </main>
@@ -150,7 +154,7 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto - aparece no Dashboard quando comprares</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js?v=13"></script>
+<script src="/static/app.js?v=14"></script>
 <script>
 if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100); }
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
