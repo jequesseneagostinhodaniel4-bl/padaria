@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - CORRIGIDO v12
+// PADARIA JEQUESSENE - CORRIGIDO v13 - COM LIMPAR PARA VENDER
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
@@ -128,4 +128,37 @@ function exportarExcel(){ baixarComToken('/api/export/excel', 'padaria_jequessen
 function exportarCSV(){ baixarComToken('/api/export/csv', 'padaria_jequessene.csv'); toast('A exportar CSV...'); }
 function baixarReciboVenda(id){ baixarComToken('/api/recibo/venda/'+id, 'recibo_venda_'+id+'.pdf'); }
 function baixarReciboCompra(id){ baixarComToken('/api/recibo/compra/'+id, 'recibo_compra_'+id+'.pdf'); }
+// --- NOVO v13: LIMPAR PARA VENDER ---
+async function limparSistema(){
+  const confirmar = val('limparConfirmar');
+  const senha = val('limparSenha');
+  if(!confirmar || confirmar.toUpperCase() !== 'LIMPAR'){ alert('Escreve LIMPAR no campo para confirmar.'); return; }
+  if(!senha){ alert('Escreve a tua senha de Admin.'); return; }
+  if(!confirm('TENS A CERTEZA? Vai apagar TODAS as vendas, compras, despesas, encomendas e pessoas de teste. Não dá para voltar atrás!')) return;
+  if(!confirm('Última confirmação: Limpar mesmo tudo para vender?')) return;
+  try{
+    const d = await api('/api/admin/limpar-tudo','POST',{confirmar:confirmar, senha_admin:senha});
+    alert(d.msg);
+    const elMsg = document.getElementById('limparMsg'); if(elMsg) elMsg.innerText = d.msg;
+    const elC = document.getElementById('limparConfirmar'); if(elC) elC.value='';
+    const elS = document.getElementById('limparSenha'); if(elS) elS.value='';
+    toast('Sistema limpo!');
+    carregarDados();
+  }catch(e){ alert(e.message); }
+}
+async function limparSoVendas(){
+  const confirmar = val('limparConfirmar');
+  const senha = val('limparSenha');
+  if(!confirmar || confirmar.toUpperCase() !== 'LIMPAR'){ alert('Escreve LIMPAR para confirmar.'); return; }
+  if(!senha){ alert('Escreve a tua senha de Admin.'); return; }
+  if(!confirm('Apagar só vendas e histórico? Produtos e pessoas ficam.')) return;
+  try{
+    const d = await api('/api/admin/limpar-vendas','POST',{confirmar:confirmar, senha_admin:senha});
+    alert(d.msg);
+    const elMsg = document.getElementById('limparMsg'); if(elMsg) elMsg.innerText = d.msg;
+    carregarDados();
+  }catch(e){ alert(e.message); }
+}
+window.limparSistema = limparSistema;
+window.limparSoVendas = limparSoVendas;
 if(token){ carregarDados(); }
