@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - CORRIGIDO v13 - COM LIMPAR PARA VENDER
+// PADARIA JEQUESSENE - CORRIGIDO v14 - COM LIMPAR POR PARTES
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
@@ -159,6 +159,32 @@ async function limparSoVendas(){
     carregarDados();
   }catch(e){ alert(e.message); }
 }
+// --- NOVO v14: LIMPAR POR PARTES - ULTIMAS VENDAS / COMPRAS / FLUXO ---
+async function _pegarLimpar(){
+  const confirmar = val('limparConfirmar');
+  const senha = val('limparSenha');
+  if(!confirmar || confirmar.toUpperCase() !== 'LIMPAR'){ alert('Escreve LIMPAR no campo lá em cima para confirmar.'); return null; }
+  if(!senha){ alert('Escreve a tua senha de Admin.'); return null; }
+  return {confirmar:confirmar, senha_admin:senha};
+}
+async function limparUltimasVendas(){
+  const body = _pegarLimpar(); if(!body) return;
+  if(!confirm('Apagar TODAS as Últimas Vendas? Dashboard fica a 0.')) return;
+  try{ const d = await api('/api/admin/limpar-ultimas-vendas','POST',body); alert(d.msg); const el=document.getElementById('limparPartesMsg'); if(el) el.innerText=d.msg; carregarDados(); carregarPainelAdmin(); }catch(e){ alert(e.message); }
+}
+async function limparUltimasCompras(){
+  const body = _pegarLimpar(); if(!body) return;
+  if(!confirm('Apagar TODAS as Últimas Compras?')) return;
+  try{ const d = await api('/api/admin/limpar-ultimas-compras','POST',body); alert(d.msg); const el=document.getElementById('limparPartesMsg'); if(el) el.innerText=d.msg; carregarDados(); carregarPainelAdmin(); }catch(e){ alert(e.message); }
+}
+async function limparFluxo(){
+  const body = _pegarLimpar(); if(!body) return;
+  if(!confirm('Apagar o histórico de Quem fez o quê?')) return;
+  try{ const d = await api('/api/admin/limpar-fluxo','POST',body); alert(d.msg); const el=document.getElementById('limparPartesMsg'); if(el) el.innerText=d.msg; carregarPainelAdmin(); }catch(e){ alert(e.message); }
+}
 window.limparSistema = limparSistema;
 window.limparSoVendas = limparSoVendas;
+window.limparUltimasVendas = limparUltimasVendas;
+window.limparUltimasCompras = limparUltimasCompras;
+window.limparFluxo = limparFluxo;
 if(token){ carregarDados(); }
