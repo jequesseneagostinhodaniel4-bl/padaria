@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Padaria Jequessene</title>
 <script>try{ if(localStorage.getItem('tema_jeq')==='preto'){ document.documentElement.classList.add('tema-preto'); } }catch(e){}</script>
-<link rel="stylesheet" href="/static/style.css?v=14">
+<link rel="stylesheet" href="/static/style.css?v=16">
 <style>
 .dash-card{background:#fff!important;border:1px solid #EDE6DA;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05);color:#111!important}
 .dash-card h1, .dash-card b{color:#111!important}
@@ -36,6 +36,9 @@ body.tema-preto .btn-tema{background:#fff !important;color:#111 !important}
 #listaEnc .linha{ background:#FFFBF2!important; color:#111!important; }
 #listaEnc .linha b{ color:#111!important; }
 #listaEnc .linha small{ color:#555!important; }
+#listaMinhasEnc .linha{ background:#FFFBF2!important; color:#111!important; }
+#listaMinhasEnc .linha b{ color:#111!important; }
+#listaMinhasEnc .linha small{ color:#555!important; }
 .sidebar{ background:#1F150C!important; }
 .sidebar button{ display:block!important; width:100%!important; text-align:left!important; background:transparent!important; color:#EDE3D3!important; border:1px solid #3A2C1A!important; padding:11px 12px!important; border-radius:10px!important; cursor:pointer!important; font-size:14px!important; margin-bottom:6px!important; }
 .sidebar button.on, .sidebar button:hover{ background:#E8B84B!important; color:#111!important; font-weight:700!important; }
@@ -86,6 +89,9 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
 .limpar-partes-box{background:#FFF8E1!important;border:1px solid #F5EEDD!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
 .limpar-partes-box b{color:#111!important}
 .limpar-partes-box p{color:#555!important;font-size:13px!important}
+/* V16 - Encomenda clara */
+.label-campo{font-size:12px;font-weight:700;color:#555;margin:12px 0 2px;display:block}
+.preco-auto{background:#E8F5E9!important;border:1px solid #A5D6A7!important;padding:12px;border-radius:12px;font-weight:700;color:#111!important;margin:8px 0}
 </style>
 </head>
 <body>
@@ -109,16 +115,19 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
       <p id="avisoPerm" class="danger hidden"></p>
       <h4>Operação</h4>
       <div id="menuOperacao">
-        <button data-sec="dashSec" onclick="mostrarSec('dashSec',this)">Dashboard</button>
-        <button data-sec="vendasSec" onclick="mostrarSec('vendasSec',this)">Vender</button>
-        <button data-sec="fornecedorSec" onclick="mostrarSec('fornecedorSec',this)">Comprar / Fornecedor</button>
-        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">Encomendas</button>
+        <!-- V16: ids com data-so-func para o app.js remover para Cliente -->
+        <button data-sec="dashSec" data-so-func="1" onclick="mostrarSec('dashSec',this)">Dashboard</button>
+        <button data-sec="vendasSec" data-so-func="1" onclick="mostrarSec('vendasSec',this)">Vender</button>
+        <button data-sec="fornecedorSec" data-so-func="1" onclick="mostrarSec('fornecedorSec',this)">Comprar / Fornecedor</button>
+        <!-- V16: SEPARADO - Fazer Encomenda / Minhas Encomendas -->
+        <button data-sec="encomendasSec" onclick="mostrarSec('encomendasSec',this)">📦 Fazer Encomenda</button>
+        <button data-sec="minhasEncomendasSec" onclick="mostrarSec('minhasEncomendasSec',this)">🛒 Minhas Encomendas</button>
         <button data-sec="produtosSec" onclick="mostrarSec('produtosSec',this)">Produtos</button>
-        <button data-sec="stockSec" onclick="mostrarSec('stockSec',this)">Stock</button>
-        <button data-sec="dividasSec" onclick="mostrarSec('dividasSec',this)">Dívidas</button>
+        <button data-sec="stockSec" data-so-func="1" onclick="mostrarSec('stockSec',this)">Stock</button>
+        <button data-sec="dividasSec" data-so-func="1" onclick="mostrarSec('dividasSec',this)">Dívidas</button>
       </div>
       <h4 id="tituloGestao">Gestão</h4>
-      <div id="menuGestao"><button data-sec="pessoasSec" onclick="mostrarSec('pessoasSec',this)">Pessoas</button><button data-sec="adminSec" onclick="mostrarSec('adminSec',this)">Painel Admin</button></div>
+      <div id="menuGestao"><button data-sec="pessoasSec" data-so-func="1" onclick="mostrarSec('pessoasSec',this)">Pessoas</button><button data-sec="adminSec" data-so-func="1" onclick="mostrarSec('adminSec',this)">Painel Admin</button></div>
       <h4>Conta</h4><button onclick="abrirPerfil()">Trocar minha foto</button><button onclick="abrirTroca()">Trocar de conta</button><button class="sair" onclick="sair()">Sair</button>
     </aside>
     <main class="main">
@@ -137,11 +146,50 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
         <div class="dash-card" style="margin-top:14px"><div class="dash-card-top"><span>⭐ Vendas de Encomendas Entregues</span><span>Encomenda virou Venda</span></div><div id="listaEncVendasDash" style="margin-top:12px"></div></div>
       </div>
       <div id="pessoasSec" class="card hidden"><h2>Pessoas</h2><p class="muted">Só o Admin pode demitir / reativar.</p><div id="listaPessoas"></div></div>
-      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Cliente só vê e compra. Funcionário/Admin gerem produtos.</p><p id="avisoClienteProd" class="hidden" style="background:#FFF3CD;padding:12px;border-radius:10px;font-weight:700;color:#111">Como Cliente, tu só podes ver e comprar. Para encomendar, clica em Comprar no produto.</p><input id="pesquisaProd" placeholder="Pesquisar produto..." oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><div id="formAddProd"><h3>Adicionar / Editar - Só Funcionário / Admin</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div></div>
+      <div id="produtosSec" class="card hidden"><h2>Produtos</h2><p class="muted">Cliente só vê e compra. Funcionário/Admin gerem produtos.</p><p id="avisoClienteProd" class="hidden" style="background:#FFF3CD;padding:12px;border-radius:10px;font-weight:700;color:#111">Como Cliente, tu só podes ver e comprar. Para encomendar, clica em Comprar no produto.</p><input id="pesquisaProd" placeholder="Pesquisar produto... Ex: Bolo de Chocolate" oninput="carregarDados()"><div id="gridProd" class="prod-grid"></div><div id="formAddProd"><h3>Adicionar / Editar - Só Funcionário / Admin</h3><input id="pNome" placeholder="Nome • ex: Bolo de Chocolate"><select id="pCat"><option>Pães</option><option>Bolos</option><option>Pastéis</option><option>Doces</option><option>Salgados</option><option>Bebidas</option></select><input id="pPreco" type="number" placeholder="Preço de venda MT"><input id="pCusto" type="number" placeholder="Custo MT"><input id="pStock" type="number" placeholder="Stock inicial"><label style="font-size:12px;color:#8A7A68">Foto do produto</label><input type="file" accept="image/*" onchange="lerFoto(event)"><button class="btn btn-green" id="btnSalvarProd" onclick="salvarProd()">Adicionar produto</button></div></div>
       <div id="vendasSec" class="card hidden"><h2>Vender</h2><select id="vProd"></select><input id="vQtd" type="number" value="1"><input id="vCliente" placeholder="Cliente • ex: Maria"><input id="vTel" placeholder="Telefone do cliente"><select id="vPag"><option>M-Pesa</option><option>e-Mola</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Fiado / Dívida</option></select><input id="vDataPag" type="date"><button class="btn btn-green" onclick="addVenda()">Vender e gerar recibo</button><h3>Despesa</h3><input id="sDesc" placeholder="Ex: Pagar luz"><input id="sValor" type="number" placeholder="Valor MT"><select id="sCat"><option>Geral</option><option>Luz</option><option>Água</option><option>Aluguer</option><option>Salário</option><option>Material</option></select><button class="btn btn-orange" onclick="addDespesa()">Registar despesa</button></div>
       <div id="stockSec" class="card hidden"><h2>Stock</h2><p id="alertaStock" class="danger"></p><div id="listaStock"></div></div>
       <div id="fornecedorSec" class="card hidden"><h2>Comprar • Fornecedor</h2><input id="fNome" placeholder="Nome fornecedor"><input id="fTel" placeholder="Telefone"><input id="fProd" placeholder="O que vende • ex: Farinha 50kg"><input id="fPreco" type="number" placeholder="Preço MT"><input id="fLocal" placeholder="Local • ex: Matola"><button class="btn btn-gold" onclick="addForn()">Adicionar fornecedor</button><div id="listaForn"></div><h3>Registar compra</h3><select id="cForn"></select><input id="cProd" placeholder="Produto • ex: Farinha"><input id="cQtd" type="number" value="1"><input id="cPreco" type="number" placeholder="Preço por unidade MT"><select id="cPag"><option>Dinheiro</option><option>M-Pesa</option><option>e-Mola</option><option>Transferência</option><option>Fiado</option></select><button class="btn btn-green" onclick="addCompra()">Registar compra</button><div id="listaCompras"></div></div>
-      <div id="encomendasSec" class="card hidden"><h2>Encomendas</h2><p class="muted">Cliente, Funcionário e Admin podem fazer encomenda. Quando entrega, vira Venda.</p><input id="eCliente" placeholder="Cliente"><input id="eTel" placeholder="Telefone"><select id="eTipo"><option value="">A carregar produtos...</option></select><input id="eData" type="date"><input id="ePreco" type="number" placeholder="Preço MT - se vazio usa preço do produto"><select id="eSinal"><option>Sem Sinal</option><option>Sinal 50%</option><option>Pago Total</option></select><input id="eObs" placeholder="Detalhes: rosa, 2 andares, nome Maria..."><button class="btn btn-gold" onclick="addEnc()">Registar encomenda</button><h3 style="margin-top:18px">📦 Minhas / Todas Encomendas</h3><div id="listaEnc"></div><h3>⭐ Vendas de Encomendas Entregues</h3><div id="listaEncVendas"></div></div>
+
+      <!-- V16 PAGINA 1: SO FAZER ENCOMENDA - SEM LISTA EM BAIXO, SEM CAMPO PRECO -->
+      <div id="encomendasSec" class="card hidden">
+        <button class="btn" onclick="mostrarSec('produtosSec',document.querySelector('[data-sec=produtosSec]'))">← Voltar para Produtos</button>
+        <h2>📦 Fazer Encomenda</h2><p class="muted">Escolhe o produto, personaliza e escolhe quando queres receber.</p>
+        <span class="label-campo">1. Teu nome</span>
+        <input id="eCliente" placeholder="Ex: Maria dos Santos">
+        <span class="label-campo">2. Teu telefone</span>
+        <input id="eTel" placeholder="Ex: 841234567">
+        <span class="label-campo">3. O que queres encomendar?</span>
+        <select id="eTipo" onchange="atualizarPrecoEncomenda()"><option value="">Escolhe um produto...</option></select>
+        <!-- V16: Preço AUTOMATICO, Cliente NÃO escreve -->
+        <div id="precoEncomendaBox" class="preco-auto">Preço: escolhe um produto para ver o preço</div>
+        <span class="label-campo">4. Quando queres receber? 📅</span>
+        <input id="eData" type="date">
+        <small style="color:#888">Ex: se queres para sábado, escolhe a data de sábado. É a data de entrega.</small>
+        <span class="label-campo">5. Como vais pagar? 💰</span>
+        <select id="eSinal">
+          <option value="Sem Sinal">Ainda não paguei - Vou pagar na entrega</option>
+          <option value="Sinal 50%">Vou pagar 50% agora (sinal) e resto na entrega</option>
+          <option value="Pago Total">Já paguei tudo</option>
+        </select>
+        <span class="label-campo">6. Como queres o teu bolo / pão? Personaliza aqui 🎂</span>
+        <input id="eObs" placeholder="Ex: Bolo rosa, 2 andares, com nome Maria, sem amendoim...">
+        <small style="color:#888">✅ Isto está bom! Se personalizares muito, a Padaria pode ajustar o preço e vai te avisar no WhatsApp.</small>
+        <br><br><button class="btn btn-gold" onclick="addEnc()">✅ Confirmar Encomenda</button>
+        <button class="btn" onclick="mostrarSec('minhasEncomendasSec',document.querySelector('[data-sec=minhasEncomendasSec]'))">Ver Minhas Encomendas →</button>
+        <!-- Compat: lista antiga escondida para o app.js antigo não quebrar, mas vazia -->
+        <div id="listaEnc" class="hidden"></div>
+      </div>
+
+      <!-- V16 PAGINA 2: SO MINHAS ENCOMENDAS - TIPO CARRINHO -->
+      <div id="minhasEncomendasSec" class="card hidden">
+        <button class="btn" onclick="mostrarSec('produtosSec',document.querySelector('[data-sec=produtosSec]'))">← Voltar para Produtos</button>
+        <h2>🛒 Minhas Encomendas</h2><p class="muted">Aqui vês tudo o que já pediste, se já pagaste ou não, e se já foi entregue.</p>
+        <div id="listaMinhasEnc"></div>
+        <h3>⭐ Vendas de Encomendas Entregues</h3><div id="listaEncVendas"></div>
+        <button class="btn btn-gold" onclick="mostrarSec('encomendasSec',document.querySelector('[data-sec=encomendasSec]'))">+ Fazer nova encomenda</button>
+      </div>
+
       <div id="dividasSec" class="card hidden"><h2>Dívidas</h2><div id="listaDividas"></div></div>
       <div id="adminSec" class="card hidden"><h2>Painel do Administrador</h2><p class="muted">Só Jequessene.</p><div class="flex"><button class="btn btn-dark" onclick="carregarPainelAdmin()">Atualizar</button><button class="btn btn-gold" onclick="abrirTroca()">Trocar de conta</button><button class="btn" onclick="backup()">Backup</button><button class="btn" onclick="exportarExcel()">📥 Exportar Excel</button><button class="btn btn-dark" onclick="fechoDia()">📄 Fecho do dia</button></div><div id="adminResumo"></div><div id="adminVendas"></div><div id="adminCompras"></div><div id="adminFluxo"></div>
       <div class="limpar-box"><b>🧹 Limpar Sistema para Vender</b><p>Apaga vendas, compras, despesas, encomendas e pessoas de teste. Mantém produtos e Admin. Não dá para voltar atrás!</p><input id="limparConfirmar" placeholder="Escreve LIMPAR para confirmar"><input id="limparSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-red" onclick="limparSistema()">🧹 Limpar TUDO para Vender</button><button class="btn" onclick="limparSoVendas()">Só limpar Vendas / Histórico</button></div><p id="limparMsg" style="font-weight:700"></p></div>
@@ -154,7 +202,7 @@ body.tema-preto #resumoSemanaTxt{ color:#fff!important; }
 </div>
 <div id="modalPerfil" class="modal hidden"><div class="box"><h2>Meu perfil</h2><img id="perfilFotoPrev" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;border:3px solid #E8B84B"><label style="font-size:12px;color:#8A7A68">Trocar foto - aparece no Dashboard quando comprares</label><input type="file" accept="image/*" onchange="lerFotoPerfil(event)"><input id="perfilNome" placeholder="Nome"><input id="perfilBairro" placeholder="Bairro"><input id="perfilEmail" placeholder="Email"><div class="flex"><button class="btn btn-dark" onclick="salvarPerfil()">Guardar</button><button class="btn" onclick="fecharPerfil()">Fechar</button></div><hr><h3>Mudar senha</h3><input id="senhaAntiga" type="password" placeholder="Senha antiga"><input id="senhaNova" type="password" placeholder="Nova senha"><button class="btn btn-gold" onclick="mudarSenha()">Trocar senha</button></div></div>
 <div id="modalTroca" class="modal hidden"><div class="box"><h2>Trocar de conta • Admin</h2><div id="listaTroca"></div><input id="trocaTel" placeholder="Telefone da conta"><input id="trocaSenha" type="password" placeholder="Tua senha de Admin"><div class="flex"><button class="btn btn-dark" onclick="trocarConta()">Entrar nessa conta</button><button class="btn" onclick="fecharTroca()">Cancelar</button></div></div></div>
-<script src="/static/app.js?v=14"></script>
+<script src="/static/app.js?v=16"></script>
 <script>
 if(localStorage.getItem('tema_jeq')==='preto'){ document.body.classList.add('tema-preto'); setTimeout(()=>{ const b=document.getElementById('btn-tema'); if(b) b.innerText='☀️ Branco'; const b2=document.getElementById('btn-tema-login'); if(b2) b2.innerText='☀️ Branco'; },100); }
 document.getElementById('dataHoje').innerText = new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});
@@ -164,6 +212,9 @@ function mostrarLogin(){document.getElementById('formLogin').classList.remove('h
 function mostrarRegisto(){document.getElementById('formLogin').classList.add('hidden');document.getElementById('formRegistar').classList.remove('hidden');document.getElementById('tabLogin').classList.remove('on');document.getElementById('tabRegisto').classList.add('on')}
 function toggleMenu(){document.getElementById('sidebar').classList.toggle('open')}
 function entrarSistema(){ var w=document.getElementById('welcome'); w.classList.add('hidden'); w.style.display='none'; w.style.visibility='hidden'; document.getElementById('app').classList.remove('hidden'); document.getElementById('app').style.display='block'; carregarDados(); }
+// V16: Botão Voltar do telemóvel volta para Produtos, NÃO sai do sistema
+window.addEventListener('popstate', function(e){ e.preventDefault(); try{ mostrarSec('produtosSec', document.querySelector('[data-sec="produtosSec"]')); }catch(err){} });
+try{ history.pushState({page:'app'}, '', location.href); }catch(e){}
 </script>
 </body>
 </html>
