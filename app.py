@@ -525,7 +525,7 @@ def painel_admin(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
 @app.get("/api/backup")
 def backup(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
-# --- NOVO: LIMPAR PARA VENDER ---
+# --- NOVO v14: LIMPAR PARA VENDER + POR PARTES ---
 @app.post("/api/admin/limpar-tudo")
 def limpar_tudo(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     if x.confirmar.strip().upper() != "LIMPAR":
@@ -562,6 +562,44 @@ def limpar_so_vendas(x: LimparIn, a: User = Depends(admin_only), d: Session = De
     d.query(Log).delete()
     d.commit()
     return {"ok": True, "msg": "Só vendas / histórico apagados. Produtos e pessoas mantidos."}
+@app.post("/api/admin/limpar-ultimas-vendas")
+def limpar_ultimas_vendas(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    if x.confirmar.strip().upper() != "LIMPAR":
+        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    try: ok = pwd.verify(x.senha_admin, a.password_hash)
+    except Exception: ok = False
+    if not ok: raise HTTPException(401, "Senha do Admin errada!")
+    n = d.query(Venda).count()
+    d.query(Venda).delete()
+    d.query(Historico).filter(Historico.motivo=="VENDA").delete()
+    d.commit()
+    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_vendas", detalhe=f"Apagou {n} vendas")); d.commit()
+    return {"ok": True, "msg": f"{n} últimas vendas apagadas! Dashboard a 0."}
+@app.post("/api/admin/limpar-ultimas-compras")
+def limpar_ultimas_compras(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    if x.confirmar.strip().upper() != "LIMPAR":
+        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    try: ok = pwd.verify(x.senha_admin, a.password_hash)
+    except Exception: ok = False
+    if not ok: raise HTTPException(401, "Senha do Admin errada!")
+    n = d.query(Compra).count()
+    d.query(Compra).delete()
+    d.query(Historico).filter(Historico.motivo=="COMPRA").delete()
+    d.commit()
+    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_compras", detalhe=f"Apagou {n} compras")); d.commit()
+    return {"ok": True, "msg": f"{n} últimas compras apagadas!"}
+@app.post("/api/admin/limpar-fluxo")
+def limpar_fluxo(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    if x.confirmar.strip().upper() != "LIMPAR":
+        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    try: ok = pwd.verify(x.senha_admin, a.password_hash)
+    except Exception: ok = False
+    if not ok: raise HTTPException(401, "Senha do Admin errada!")
+    n = d.query(Log).count()
+    d.query(Log).delete()
+    d.commit()
+    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_fluxo", detalhe="Fluxo Quem fez o quê limpo")); d.commit()
+    return {"ok": True, "msg": f"Fluxo limpo! {n} registos de 'Quem fez o quê' apagados."}
 @app.get("/api/historico")
 def get_historico(d: Session = Depends(dbdep), u: User = Depends(current_user)):
     rows = d.query(Historico).order_by(Historico.id.desc()).all()
