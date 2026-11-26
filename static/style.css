@@ -97,3 +97,13 @@ body:not(.tema-preto) #graficoProf span{ color:#111!important; }
 body.tema-preto #graficoProf span{ color:#fff!important; }
 body:not(.tema-preto) #graficoLabels span{ color:#111!important; }
 body.tema-preto #graficoLabels span{ color:#fff!important; }
+/* --- NOVO v13: LIMPAR PARA VENDER --- */
+.limpar-box{background:#FDECEC!important;border:1px solid #F5C6C6!important;border-radius:14px!important;padding:14px!important;margin-top:14px!important}
+.limpar-box b{color:#C0392B!important;font-size:15px!important}
+.limpar-box p{color:#555!important;font-size:13px!important;line-height:1.5!important}
+.limpar-box input{background:#fff!important;border:1px solid #F5C6C6!important}
+.limpar-box .btn-red{width:100%}
+#limparMsg{color:#2E9E5B!important;font-weight:800!important}
+body.tema-preto .limpar-box{background:#2A1A1A!important;border-color:#5C2A2A!important}
+body.tema-preto .limpar-box b{color:#FF8A7A!important}
+body.tema-preto .limpar-box p{color:#D9CFCF!important}
