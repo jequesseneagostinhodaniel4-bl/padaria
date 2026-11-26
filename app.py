@@ -395,7 +395,6 @@ def edit_product(pid: int, x: ProdIn, u: User = Depends(funcionario_only), d: Se
     if not p: raise HTTPException(404, "Não existe")
     dados = x.model_dump()
     if not dados.get("foto"): dados.pop("foto")
-    # V21: FUNCIONARIO SO MUDA STOCK, NOME, VALIDADE - NUNCA PRECO/CUSTO
     if not u.is_admin and normalizar_tipo(u.tipo) == "Funcionário":
         p.stock = dados.get("stock", p.stock); p.nome = dados.get("nome", p.nome)
         if dados.get("validade"): p.validade = dados["validade"]
@@ -420,7 +419,6 @@ def save_ficha(pid: int, x: FichaIn, u: User = Depends(admin_only), d: Session =
     p = d.get(Product, pid)
     if p: p.custo = total
     d.commit(); return {"ok": True, "msg": f"Ficha guardada! Custo real: {total} MT"}
-# V21 - INGREDIENTES
 @app.get("/api/ingredientes")
 def list_ing(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     return [{"id": x.id, "nome": x.nome, "stock": x.stock, "unidade": x.unidade, "validade": x.validade} for x in d.query(Ingrediente).all()]
@@ -512,7 +510,6 @@ def entregar(eid: int, u: User = Depends(funcionario_only), d: Session = Depends
     if p and p.stock > 0: p.stock -= 1
     v = Venda(cliente=e.cliente, cliente_tel=e.telefone, vendedor=u.nome, produto=e.tipo, qtd=1, total=total, custo_total=custo, lucro=total-custo, pagamento="Encomenda", estado="Pago", data_pagamento=e.data_entrega)
     d.add(v)
-    # V21: Pontos - 1 ponto a cada 100 MT
     cli = d.query(User).filter_by(telefone=e.telefone).first()
     if cli: cli.pontos = (getattr(cli, "pontos", 0) or 0) + int(total // 100)
     d.commit(); log_action(d, u.nome, u.tipo, "encomenda_entregue_venda", f"{e.tipo} entregue -> venda {total} MT")
@@ -608,7 +605,7 @@ def export_excel(d: Session = Depends(dbdep), u: User = Depends(funcionario_only
     for x in d.query(Despesa).all(): ws4.append([x.created_at.strftime("%d/%m/%Y %H:%M"), x.descricao, x.valor, x.categoria, x.criado_por])
     ws5 = wb.create_sheet("Fecho Hoje")
     hoje = date.today(); vs = [x for x in d.query(Venda).all() if x.created_at.date() == hoje]; cs = [x for x in d.query(Compra).all() if x.created_at.date() == hoje]; ds = [x for x in d.query(Despesa).all() if x.created_at.date() == hoje]
-    ws5.append(["PADARIA JEQUESSENE - FECHO", hoje.strftime("%d/%m/%Y")]); ws5.append(["Vendas Hoje", sum(x.total for x in vs)]); ws5.append(["Compras Hoje", sum(x.total for x in cs)]); ws5.append(["Despesas Hoje", sum(x.valor for x in ds)]); ws5.append(["Lucro Liquido", sum(x.total for x in vs)-sum(x.total for x in cs)-sum(x.valor for x in ds)])
+    ws5.append(["PADARIA- FECHO", hoje.strftime("%d/%m/%Y")]); ws5.append(["Vendas Hoje", sum(x.total for x in vs)]); ws5.append(["Compras Hoje", sum(x.total for x in cs)]); ws5.append(["Despesas Hoje", sum(x.valor for x in ds)]); ws5.append(["Lucro Liquido", sum(x.total for x in vs)-sum(x.total for x in cs)-sum(x.valor for x in ds)])
     ws6 = wb.create_sheet("Ficha Tecnica")
     ws6.append(["Produto","Ingrediente","Qtd","Unidade","Custo MT"])
     for f in d.query(Ficha).all():
