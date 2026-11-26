@@ -8,4 +8,4 @@ services:
             - key: SECRET_KEY
         generateValue: true
             - key: ADMIN_PASSWORD
-        value: Jequessene12345
+        value:0409
