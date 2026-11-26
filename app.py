@@ -38,6 +38,7 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     tema: Mapped[str] = mapped_column(String(20), default="branco")
+    pontos: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
 class Product(Base):
     __tablename__ = "products"
@@ -49,8 +50,25 @@ class Product(Base):
     stock: Mapped[int] = mapped_column(Integer, default=0)
     stock_minimo: Mapped[int] = mapped_column(Integer, default=5)
     foto: Mapped[str] = mapped_column(Text, default="")
+    validade: Mapped[str] = mapped_column(String(20), default="")
     updated_by: Mapped[str] = mapped_column(String(120), default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=agora)
+# V21 - FICHA TECNICA + INGREDIENTES
+class Ficha(Base):
+    __tablename__ = "fichas"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    produto_id: Mapped[int] = mapped_column(Integer, default=0)
+    ingrediente: Mapped[str] = mapped_column(String(120), default="")
+    qtd: Mapped[float] = mapped_column(Float, default=0)
+    unidade: Mapped[str] = mapped_column(String(20), default="Kg")
+    custo: Mapped[float] = mapped_column(Float, default=0)
+class Ingrediente(Base):
+    __tablename__ = "ingredientes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), default="")
+    stock: Mapped[float] = mapped_column(Float, default=0)
+    unidade: Mapped[str] = mapped_column(String(20), default="Kg")
+    validade: Mapped[str] = mapped_column(String(20), default="")
 class Historico(Base):
     __tablename__ = "historico"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -132,8 +150,10 @@ try:
     with engine.connect() as conn:
         if DBURL.startswith("sqlite"):
             cols_u = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
-            if "tema" not in cols_u:
-                conn.execute(text("ALTER TABLE users ADD COLUMN tema VARCHAR(20) DEFAULT 'branco'")); conn.commit()
+            if "tema" not in cols_u: conn.execute(text("ALTER TABLE users ADD COLUMN tema VARCHAR(20) DEFAULT 'branco'")); conn.commit()
+            if "pontos" not in cols_u: conn.execute(text("ALTER TABLE users ADD COLUMN pontos INTEGER DEFAULT 0")); conn.commit()
+            cols_p = [r[1] for r in conn.execute(text("PRAGMA table_info(products)")).fetchall()]
+            if "validade" not in cols_p: conn.execute(text("ALTER TABLE products ADD COLUMN validade VARCHAR(20) DEFAULT ''")); conn.commit()
             cols_e = [r[1] for r in conn.execute(text("PRAGMA table_info(encomendas)")).fetchall()]
             if "ponto" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN ponto TEXT DEFAULT ''")); conn.commit()
             if "criado_por" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN criado_por VARCHAR(120) DEFAULT ''")); conn.commit()
@@ -141,12 +161,14 @@ try:
             if "cliente_foto" not in cols_e: conn.execute(text("ALTER TABLE encomendas ADD COLUMN cliente_foto TEXT DEFAULT ''")); conn.commit()
         else:
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS tema VARCHAR(20) DEFAULT 'branco'"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pontos INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS validade VARCHAR(20) DEFAULT ''"))
             conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS ponto TEXT DEFAULT ''"))
             conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS criado_por VARCHAR(120) DEFAULT ''"))
             conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS avaliacao INTEGER DEFAULT 0"))
             conn.execute(text("ALTER TABLE encomendas ADD COLUMN IF NOT EXISTS cliente_foto TEXT DEFAULT ''"))
             conn.commit()
-    print("Migracao tema+encomenda OK")
+    print("Migracao V21 OK")
 except Exception as e:
     print("Migracao ignorada:", e)
 def dbdep():
@@ -225,7 +247,7 @@ class Login(BaseModel):
 class SwitchIn(BaseModel):
     target_telefone: str; admin_password: str
 class ProdIn(BaseModel):
-    nome: str; categoria: str = "Pães"; preco: float = 0; custo: float = 0; stock: int = 0; stock_minimo: int = 5; foto: str = ""
+    nome: str; categoria: str = "Pães"; preco: float = 0; custo: float = 0; stock: int = 0; stock_minimo: int = 5; foto: str = ""; validade: str = ""
 class FornIn(BaseModel):
     nome: str; telefone: str = ""; produto: str = ""; preco: float = 0; localizacao: str = ""
 class CompraIn(BaseModel):
@@ -246,6 +268,12 @@ class PerfilIn(BaseModel):
     nome: str = ""; bairro: str = ""; foto: str = ""; email: str = ""
 class LimparIn(BaseModel):
     confirmar: str = ""; senha_admin: str = ""
+class FichaIn(BaseModel):
+    itens: list = []
+class IngredienteIn(BaseModel):
+    nome: str; stock: float = 0; unidade: str = "Kg"; validade: str = ""
+class EstadoIn(BaseModel):
+    estado: str = "Pendente"
 @app.post("/api/register")
 def register(x: Register, d: Session = Depends(dbdep)):
     tel = clean_tel(x.telefone)
@@ -274,11 +302,10 @@ def login(x: Login, d: Session = Depends(dbdep)):
     return {"token": make_token(u), "user": {"nome": u.nome, "tipo": u.tipo, "is_admin": u.is_admin}}
 @app.get("/api/me")
 def me(u: User = Depends(current_user)):
-    return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin, "tema": getattr(u, "tema", "branco") or "branco"}
+    return {"id": u.id, "nome": u.nome, "telefone": u.telefone, "idade": u.idade, "email": u.email, "foto": u.foto, "pais": u.pais, "bairro": u.bairro, "tipo": u.tipo, "is_admin": u.is_admin, "pontos": getattr(u, "pontos", 0) or 0, "tema": getattr(u, "tema", "branco") or "branco"}
 @app.post("/api/tema")
 def salvar_tema(tema: str = Query("branco"), u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    try:
-        u.tema = "preto" if tema == "preto" else "branco"; d.commit()
+    try: u.tema = "preto" if tema == "preto" else "branco"; d.commit()
     except Exception: d.rollback()
     return {"ok": True, "tema": tema}
 @app.get("/api/tema")
@@ -303,7 +330,7 @@ def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depend
 @app.get("/api/pessoas")
 def pessoas(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     lista = d.query(User).all() if u.is_admin else d.query(User).filter_by(tipo="Cliente").all()
-    return [{"id": x.id, "nome": x.nome, "telefone": x.telefone, "idade": x.idade, "email": x.email, "foto": x.foto, "pais": x.pais, "bairro": x.bairro, "tipo": x.tipo, "active": x.is_active} for x in lista]
+    return [{"id": x.id, "nome": x.nome, "telefone": x.telefone, "idade": x.idade, "email": x.email, "foto": x.foto, "pais": x.pais, "bairro": x.bairro, "tipo": x.tipo, "pontos": getattr(x, "pontos", 0) or 0, "active": x.is_active} for x in lista]
 @app.post("/api/pessoas/{pid}/demitir")
 def demitir_pessoa(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     u = d.get(User, pid)
@@ -340,6 +367,10 @@ def alertas(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     msgs = []
     for p in esgotados: msgs.append(f"ACABOU: {p.nome}")
     for p in acabando: msgs.append(f"ESTÁ A ACABAR: {p.nome} - só tem {p.stock}")
+    hoje = date.today().isoformat()
+    for p in prods:
+        if p.validade and p.validade < hoje: msgs.append(f"VENCIDO: {p.nome} - validade {p.validade}")
+        elif p.validade and p.validade <= (date.today()+timedelta(days=3)).isoformat(): msgs.append(f"A VENCER: {p.nome} - {p.validade}")
     return {"total": len(msgs), "mensagens": msgs, "tem_alerta": len(msgs) > 0}
 @app.post("/api/admin/switch")
 def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
@@ -351,9 +382,12 @@ def switch_account(x: SwitchIn, a: User = Depends(admin_only), d: Session = Depe
     return {"token": make_token(t), "user": {"nome": t.nome, "tipo": t.tipo}}
 @app.get("/api/products")
 def get_products(u: User = Depends(current_user), d: Session = Depends(dbdep)):
-    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo if is_funcionario(u) else 0, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "lucro": (p.preco - p.custo) if is_funcionario(u) else 0, "alerta": p.stock <= p.stock_minimo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
+    return [{"id": p.id, "nome": p.nome, "categoria": p.categoria, "preco": p.preco, "custo": p.custo if is_funcionario(u) else 0, "stock": p.stock, "stock_minimo": p.stock_minimo, "foto": p.foto, "validade": getattr(p, "validade", "") or "", "lucro": (p.preco - p.custo) if is_funcionario(u) else 0, "alerta": p.stock <= p.stock_minimo, "updated_by": p.updated_by} for p in d.query(Product).order_by(Product.nome).all()]
 @app.post("/api/products")
 def add_product(x: ProdIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
+    # V21: Funcionario nao pode criar com preco/custo - so Admin define preco
+    if not u.is_admin and normalizar_tipo(u.tipo) == "Funcionário":
+        raise HTTPException(403, "Funcionário não pode criar produto com preço. Pede ao Admin.")
     p = Product(**x.model_dump()); p.updated_by = u.nome; d.add(p); d.commit(); log_action(d, u.nome, u.tipo, "produto_criar", x.nome); return {"ok": True}
 @app.put("/api/products/{pid}")
 def edit_product(pid: int, x: ProdIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
@@ -361,13 +395,38 @@ def edit_product(pid: int, x: ProdIn, u: User = Depends(funcionario_only), d: Se
     if not p: raise HTTPException(404, "Não existe")
     dados = x.model_dump()
     if not dados.get("foto"): dados.pop("foto")
-    for k, v in dados.items(): setattr(p, k, v)
+    # V21: FUNCIONARIO SO MUDA STOCK, NOME, VALIDADE - NUNCA PRECO/CUSTO
+    if not u.is_admin and normalizar_tipo(u.tipo) == "Funcionário":
+        p.stock = dados.get("stock", p.stock); p.nome = dados.get("nome", p.nome)
+        if dados.get("validade"): p.validade = dados["validade"]
+    else:
+        for k, v in dados.items(): setattr(p, k, v)
     p.updated_by = u.nome; p.updated_at = agora(); d.commit(); log_action(d, u.nome, u.tipo, "produto_editar", p.nome); return {"ok": True}
 @app.delete("/api/products/{pid}")
 def del_product(pid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     p = d.get(Product, pid)
     if not p: raise HTTPException(404, "Não existe")
     d.delete(p); d.commit(); log_action(d, a.nome, "Admin", "produto_apagar", p.nome); return {"ok": True}
+# V21 - FICHA TECNICA
+@app.get("/api/products/{pid}/ficha")
+def get_ficha(pid: int, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
+    return [{"id": f.id, "ingrediente": f.ingrediente, "qtd": f.qtd, "unidade": f.unidade, "custo": f.custo} for f in d.query(Ficha).filter_by(produto_id=pid).all()]
+@app.post("/api/products/{pid}/ficha")
+def save_ficha(pid: int, x: FichaIn, u: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    d.query(Ficha).filter_by(produto_id=pid).delete()
+    total = 0
+    for i in x.itens or []:
+        f = Ficha(produto_id=pid, ingrediente=i.get("ingrediente",""), qtd=float(i.get("qtd",0) or 0), unidade=i.get("unidade","Kg"), custo=float(i.get("custo",0) or 0)); d.add(f); total += float(i.get("custo",0) or 0)
+    p = d.get(Product, pid)
+    if p: p.custo = total
+    d.commit(); return {"ok": True, "msg": f"Ficha guardada! Custo real: {total} MT"}
+# V21 - INGREDIENTES
+@app.get("/api/ingredientes")
+def list_ing(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
+    return [{"id": x.id, "nome": x.nome, "stock": x.stock, "unidade": x.unidade, "validade": x.validade} for x in d.query(Ingrediente).all()]
+@app.post("/api/ingredientes")
+def add_ing(x: IngredienteIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
+    ing = Ingrediente(**x.model_dump()); d.add(ing); d.commit(); return {"ok": True, "msg": "Ingrediente adicionado"}
 @app.get("/api/fornecedores")
 def get_forn(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     return [{"id": f.id, "nome": f.nome, "telefone": f.telefone, "produto": f.produto, "preco": f.preco, "localizacao": f.localizacao} for f in d.query(Fornecedor).all()]
@@ -408,6 +467,15 @@ def pagar(vid: int, u: User = Depends(funcionario_only), d: Session = Depends(db
     v = d.get(Venda, vid)
     if not v: raise HTTPException(404, "Não existe")
     v.estado = "Pago"; v.pagamento = "M-Pesa (Pago)"; d.commit(); log_action(d, u.nome, u.tipo, "divida_paga", f"{v.cliente} pagou {v.total} MT"); return {"ok": True}
+@app.post("/api/vendas/{vid}/anular")
+def anular_venda(vid: int, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
+    v = d.get(Venda, vid)
+    if not v: raise HTTPException(404, "Não existe")
+    # Devolve stock
+    p = d.query(Product).filter_by(nome=v.produto).first()
+    if p: p.stock += v.qtd
+    d.delete(v); d.commit(); log_action(d, a.nome, "Admin", "anular_venda", f"Anulou venda {vid} - {v.produto}")
+    return {"ok": True, "msg": "Venda anulada pelo Admin"}
 @app.post("/api/despesas")
 def add_despesa(x: DespesaIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     ds = Despesa(**x.model_dump(), criado_por=u.nome); d.add(ds); d.commit(); log_action(d, u.nome, u.tipo, "despesa", f"{x.descricao} = {x.valor} MT"); return {"ok": True}
@@ -423,7 +491,6 @@ def get_enc(u: User = Depends(current_user), d: Session = Depends(dbdep)):
         foto = (cli.foto if cli else "") or getattr(e,"cliente_foto","") or ""
         out.append({"id": e.id, "cliente": e.cliente, "telefone": e.telefone, "tipo": e.tipo, "data_entrega": e.data_entrega, "preco": e.preco, "sinal": e.sinal, "obs": e.obs, "ponto": getattr(e,"ponto","") or "", "avaliacao": getattr(e,"avaliacao",0) or 0, "criado_por": getattr(e,"criado_por","") or "", "cliente_foto": foto, "estado": e.estado, "whatsapp_link": whatsapp_link(e.telefone, f"Ola {e.cliente}! A tua encomenda {e.tipo} esta {e.estado}.")})
     return out
-# V19 FINAL: Só Cliente encomenda
 @app.post("/api/encomendas")
 def add_enc(x: EncIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     if is_funcionario(u):
@@ -444,8 +511,25 @@ def entregar(eid: int, u: User = Depends(funcionario_only), d: Session = Depends
     p = d.query(Product).filter_by(nome=e.tipo).first(); total = e.preco or (p.preco if p else 0); custo = p.custo if p else 0
     if p and p.stock > 0: p.stock -= 1
     v = Venda(cliente=e.cliente, cliente_tel=e.telefone, vendedor=u.nome, produto=e.tipo, qtd=1, total=total, custo_total=custo, lucro=total-custo, pagamento="Encomenda", estado="Pago", data_pagamento=e.data_entrega)
-    d.add(v); d.commit(); log_action(d, u.nome, u.tipo, "encomenda_entregue_venda", f"{e.tipo} entregue -> venda {total} MT")
+    d.add(v)
+    # V21: Pontos - 1 ponto a cada 100 MT
+    cli = d.query(User).filter_by(telefone=e.telefone).first()
+    if cli: cli.pontos = (getattr(cli, "pontos", 0) or 0) + int(total // 100)
+    d.commit(); log_action(d, u.nome, u.tipo, "encomenda_entregue_venda", f"{e.tipo} entregue -> venda {total} MT")
     return {"ok": True}
+@app.post("/api/encomendas/{eid}/cancelar")
+def cancelar_enc(eid: int, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    e = d.get(Encomenda, eid)
+    if not e: raise HTTPException(404, "Não existe")
+    if e.estado == "Entregue": raise HTTPException(400, "Já entregue, não pode cancelar")
+    if not u.is_admin and e.telefone != u.telefone: raise HTTPException(403, "Não é tua encomenda")
+    e.estado = "Cancelada"; d.commit(); log_action(d, u.nome, u.tipo, "encomenda_cancelada", f"Cancelou {e.tipo}")
+    return {"ok": True, "msg": "Encomenda cancelada"}
+@app.post("/api/encomendas/{eid}/estado")
+def mudar_estado(eid: int, x: EstadoIn, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
+    e = d.get(Encomenda, eid)
+    if not e: raise HTTPException(404, "Não existe")
+    e.estado = x.estado; d.commit(); return {"ok": True, "msg": f"Estado: {e.estado}"}
 @app.post("/api/encomendas/{eid}/ponto")
 def deixar_ponto(eid: int, x: PontoIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
     e = d.get(Encomenda, eid)
@@ -516,8 +600,8 @@ def export_csv(d: Session = Depends(dbdep), u: User = Depends(funcionario_only))
 def export_excel(d: Session = Depends(dbdep), u: User = Depends(funcionario_only)):
     wb = openpyxl.Workbook(); ws = wb.active; ws.title = "Vendas"; ws.append(["Data","Cliente","Vendedor","Produto","Qtd","Total MT","Lucro MT","Pagamento","Estado"])
     for v in d.query(Venda).all(): ws.append([v.created_at.strftime("%d/%m/%Y %H:%M"), v.cliente, v.vendedor, v.produto, v.qtd, v.total, v.lucro, v.pagamento, v.estado])
-    ws2 = wb.create_sheet("Produtos"); ws2.append(["Produto","Categoria","Preco MT","Custo MT","Stock","Lucro MT"])
-    for p in d.query(Product).all(): ws2.append([p.nome, p.categoria, p.preco, p.custo, p.stock, p.preco - p.custo])
+    ws2 = wb.create_sheet("Produtos"); ws2.append(["Produto","Categoria","Preco MT","Custo MT","Stock","Lucro MT","Validade"])
+    for p in d.query(Product).all(): ws2.append([p.nome, p.categoria, p.preco, p.custo, p.stock, p.preco - p.custo, getattr(p, "validade", "")])
     ws3 = wb.create_sheet("Compras"); ws3.append(["Data","Fornecedor","Produto","Qtd","Total MT","Pagamento"])
     for c in d.query(Compra).all(): ws3.append([c.created_at.strftime("%d/%m/%Y %H:%M"), c.fornecedor, c.produto, c.qtd, c.total, c.pagamento])
     ws4 = wb.create_sheet("Despesas"); ws4.append(["Data","Descricao","Valor MT","Categoria","Criado por"])
@@ -525,6 +609,10 @@ def export_excel(d: Session = Depends(dbdep), u: User = Depends(funcionario_only
     ws5 = wb.create_sheet("Fecho Hoje")
     hoje = date.today(); vs = [x for x in d.query(Venda).all() if x.created_at.date() == hoje]; cs = [x for x in d.query(Compra).all() if x.created_at.date() == hoje]; ds = [x for x in d.query(Despesa).all() if x.created_at.date() == hoje]
     ws5.append(["PADARIA JEQUESSENE - FECHO", hoje.strftime("%d/%m/%Y")]); ws5.append(["Vendas Hoje", sum(x.total for x in vs)]); ws5.append(["Compras Hoje", sum(x.total for x in cs)]); ws5.append(["Despesas Hoje", sum(x.valor for x in ds)]); ws5.append(["Lucro Liquido", sum(x.total for x in vs)-sum(x.total for x in cs)-sum(x.valor for x in ds)])
+    ws6 = wb.create_sheet("Ficha Tecnica")
+    ws6.append(["Produto","Ingrediente","Qtd","Unidade","Custo MT"])
+    for f in d.query(Ficha).all():
+        p = d.get(Product, f.produto_id); ws6.append([p.nome if p else f.produto_id, f.ingrediente, f.qtd, f.unidade, f.custo])
     buf = io.BytesIO(); wb.save(buf); buf.seek(0)
     return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=padaria_jequessene.xlsx"})
 @app.get("/api/admin/painel")
@@ -534,14 +622,14 @@ def painel_admin(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return {"resumo": {"total_vendas": total_v, "lucro_bruto": sum(v.lucro for v in d.query(Venda).all()), "total_compras": total_c, "total_despesas": total_d, "lucro_liquido_final": total_v - total_c - total_d, "dividas": sum(v.total for v in d.query(Venda).all() if v.estado == "Dívida"), "n_vendas": d.query(Venda).count(), "n_compras": d.query(Compra).count()}, "ultimas_vendas": [{"id": v.id, "data": v.created_at.strftime("%d/%m/%Y"), "hora": v.created_at.strftime("%H:%M:%S"), "cliente": v.cliente, "vendedor": v.vendedor, "produto": v.produto, "qtd": v.qtd, "total": v.total, "lucro": v.lucro, "pagamento": v.pagamento, "estado": v.estado, "whatsapp_link": v.whatsapp_link} for v in vendas], "ultimas_compras": [{"id": c.id, "data": c.created_at.strftime("%d/%m/%Y"), "hora": c.created_at.strftime("%H:%M:%S"), "fornecedor": c.fornecedor, "produto": c.produto, "qtd": c.qtd, "total": c.total, "comprado_por": c.comprado_por} for c in compras], "fluxo": [{"data": l.created_at.strftime("%d/%m/%Y %H:%M:%S"), "quem": l.quem, "tipo": l.tipo, "acao": l.acao, "detalhe": l.detalhe} for l in logs]}
 @app.get("/api/backup")
 def backup(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
+    return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo, "pontos": getattr(u, "pontos", 0)} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock, "validade": getattr(p, "validade", "")} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
 @app.post("/api/admin/limpar-tudo")
 def limpar_tudo(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Para limpar escreve LIMPAR no campo de confirmação.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Senha do Admin errada!")
-    d.query(Venda).delete(); d.query(Compra).delete(); d.query(Despesa).delete(); d.query(Encomenda).delete(); d.query(Historico).delete(); d.query(Log).delete(); d.query(Fornecedor).delete(); d.query(User).filter(User.id != a.id).delete(); d.commit()
+    d.query(Venda).delete(); d.query(Compra).delete(); d.query(Despesa).delete(); d.query(Encomenda).delete(); d.query(Historico).delete(); d.query(Log).delete(); d.query(Fornecedor).delete(); d.query(Ficha).delete(); d.query(Ingrediente).delete(); d.query(User).filter(User.id != a.id).delete(); d.commit()
     for f in [("Farinha Matola","841234567","Farinha 50kg",1800,"Matola"),("Ovos Maputo","849876543","Ovos 30 un",900,"Maputo"),("Açúcar Matola","842222333","Açúcar 25kg",1500,"Matola")]:
         d.add(Fornecedor(nome=f[0], telefone=f[1], produto=f[2], preco=f[3], localizacao=f[4]))
     d.commit(); d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_sistema", detalhe="Sistema limpo para venda")); d.commit()
