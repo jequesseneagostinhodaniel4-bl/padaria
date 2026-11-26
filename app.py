@@ -173,7 +173,6 @@ def whatsapp_link(tel, msg):
     return f"https://wa.me/{tel}?text={quote(msg)}"
 def pagar_mpesa(telefone, valor): return {"ok": True, "metodo": "M-Pesa", "telefone": telefone, "valor": valor, "ref": f"MPESA-{datetime.now().strftime('%Y%m%d%H%M%S')}"}
 def pagar_emola(telefone, valor): return {"ok": True, "metodo": "e-Mola", "telefone": telefone, "valor": valor, "ref": f"EMOLA-{datetime.now().strftime('%Y%m%d%H%M%S')}"}
-# V16: Normaliza o sinal para texto claro
 def normalizar_sinal(s):
     s = (s or "").strip()
     if "50" in s: return "Sinal 50% - Vou pagar 50% agora e resto na entrega"
@@ -210,7 +209,6 @@ def admin_only(u: User = Depends(current_user)):
     if not u.is_admin: raise HTTPException(403, "Só Admin Jequessene.")
     return u
 def funcionario_only(u: User = Depends(current_user)):
-    # V16: CLIENTE BLOQUEADO AQUI - Dashboard, Vendas, Financeiro, etc
     if not is_funcionario(u): raise HTTPException(403, "Como Cliente não podes ver o Dashboard / Vendas da padaria. Vê só Produtos e Encomendas.")
     return u
 app = FastAPI(title="PADARIA JEQUESSENE")
@@ -236,7 +234,6 @@ class VendaIn(BaseModel):
     produto_id: int; qtd: int = 1; cliente: str = "Cliente Balcão"; cliente_tel: str = ""; pagamento: str = "M-Pesa"; data_pagamento: str = ""
 class DespesaIn(BaseModel):
     descricao: str; valor: float; categoria: str = "Geral"
-# V16: Cliente NÃO manda preco - o servidor ignora e usa o preco do produto
 class EncIn(BaseModel):
     cliente: str = ""; telefone: str = ""; tipo: str = "Bolo de Aniversário"; data_entrega: str = ""; preco: float = 0; sinal: str = "Sem Sinal"; obs: str = ""
 class PontoIn(BaseModel):
@@ -303,7 +300,6 @@ def mudar_senha(x: SenhaIn, u: User = Depends(current_user), d: Session = Depend
     if len(x.nova) < 4: raise HTTPException(400, "Nova senha muito curta")
     u.password_hash = pwd.hash(x.nova); d.commit(); log_action(d, u.nome, u.tipo, "senha_trocada", "Trocou a senha")
     return {"ok": True, "msg": "Senha trocada com sucesso!"}
-# V16: PESSOAS - Cliente NÃO pode ver, só Func/Admin
 @app.get("/api/pessoas")
 def pessoas(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     lista = d.query(User).all() if u.is_admin else d.query(User).filter_by(tipo="Cliente").all()
@@ -386,7 +382,6 @@ def add_compra(x: CompraIn, u: User = Depends(funcionario_only), d: Session = De
     c = Compra(fornecedor=f.nome, produto=x.produto, qtd=x.qtd, preco_unitario=x.preco_unitario, total=total, pagamento=x.pagamento, comprado_por=u.nome); d.add(c); d.commit(); log_action(d, u.nome, u.tipo, "compra", f"{x.produto} x{x.qtd} = {total} MT")
     d.add(Historico(tipo="ENTRADA", produto=x.produto, quantidade=x.qtd, valor=total, motivo="COMPRA")); d.commit()
     return {"ok": True, "total": total, "compra_id": c.id}
-# V16: FINANCEIRO - Cliente BLOQUEADO
 @app.get("/api/financeiro")
 def financeiro(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).order_by(Venda.created_at.desc()).limit(300).all()
@@ -428,19 +423,18 @@ def get_enc(u: User = Depends(current_user), d: Session = Depends(dbdep)):
         foto = (cli.foto if cli else "") or getattr(e,"cliente_foto","") or ""
         out.append({"id": e.id, "cliente": e.cliente, "telefone": e.telefone, "tipo": e.tipo, "data_entrega": e.data_entrega, "preco": e.preco, "sinal": e.sinal, "obs": e.obs, "ponto": getattr(e,"ponto","") or "", "avaliacao": getattr(e,"avaliacao",0) or 0, "criado_por": getattr(e,"criado_por","") or "", "cliente_foto": foto, "estado": e.estado, "whatsapp_link": whatsapp_link(e.telefone, f"Ola {e.cliente}! A tua encomenda {e.tipo} esta {e.estado}.")})
     return out
-# V16: ENCOMENDA - preco SEMPRE do produto, Cliente NUNCA escreve preco
+# V19 FINAL: Só Cliente encomenda
 @app.post("/api/encomendas")
 def add_enc(x: EncIn, u: User = Depends(current_user), d: Session = Depends(dbdep)):
+    if is_funcionario(u):
+        raise HTTPException(403, "Admin / Funcionário não pode fazer encomenda. Só o Cliente encomenda.")
     prod = d.query(Product).filter_by(nome=x.tipo).first()
-    preco_real = prod.preco if prod else 0  # IGNORA x.preco que veio do cliente
-    # Se for Cliente, usa sempre o nome/telefone dele - nao pode encomendar por outro
-    cliente_final = u.nome if is_cliente(u) else (x.cliente or u.nome)
-    tel_final = u.telefone if is_cliente(u) else (x.telefone or u.telefone)
+    preco_real = prod.preco if prod else 0
+    cliente_final = u.nome; tel_final = u.telefone
     e = Encomenda(cliente=cliente_final, telefone=tel_final, tipo=x.tipo, data_entrega=x.data_entrega, preco=preco_real, sinal=normalizar_sinal(x.sinal), obs=x.obs)
-    e.criado_por = u.nome
-    e.cliente_foto = u.foto or ""
+    e.criado_por = u.nome; e.cliente_foto = u.foto or ""
     d.add(e); d.commit(); log_action(d, u.nome, u.tipo, "encomenda", f"{x.tipo} para {cliente_final} - {preco_real} MT - {e.sinal}")
-    return {"ok": True, "id": e.id, "preco": preco_real, "msg": f"Encomenda guardada! Preço: {preco_real} MT. Se personalizares muito, a Padaria confirma o preço final."}
+    return {"ok": True, "id": e.id, "preco": preco_real, "msg": f"Encomenda guardada! Preço: {preco_real} MT."}
 @app.post("/api/encomendas/{eid}/entregar")
 def entregar(eid: int, u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     e = d.get(Encomenda, eid)
@@ -458,7 +452,6 @@ def deixar_ponto(eid: int, x: PontoIn, u: User = Depends(current_user), d: Sessi
     if not e: raise HTTPException(404, "Não existe")
     e.ponto = x.ponto; e.avaliacao = x.avaliacao; d.commit(); log_action(d, u.nome, u.tipo, "ponto_cliente", f"{u.nome} deixou ponto: {x.ponto[:100]}")
     return {"ok": True, "msg": "Ponto guardado!"}
-# V16: DASHBOARD - Cliente BLOQUEADO
 @app.get("/api/dashboard")
 def dashboard(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     vendas = d.query(Venda).all(); produtos = d.query(Product).all(); users = d.query(User).all(); despesas = d.query(Despesa).all(); compras = d.query(Compra).all(); hoje = date.today()
@@ -544,77 +537,46 @@ def backup(a: User = Depends(admin_only), d: Session = Depends(dbdep)):
     return {"users": [{"nome": u.nome, "telefone": u.telefone, "tipo": u.tipo} for u in d.query(User).all()], "products": [{"nome": p.nome, "preco": p.preco, "stock": p.stock} for p in d.query(Product).all()], "vendas": [{"cliente": v.cliente, "produto": v.produto, "total": v.total, "data": str(v.created_at)} for v in d.query(Venda).all()]}
 @app.post("/api/admin/limpar-tudo")
 def limpar_tudo(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    if x.confirmar.strip().upper() != "LIMPAR":
-        raise HTTPException(400, "Para limpar escreve LIMPAR no campo de confirmação.")
+    if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Para limpar escreve LIMPAR no campo de confirmação.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
-    if not ok:
-        raise HTTPException(401, "Senha do Admin errada!")
-    d.query(Venda).delete()
-    d.query(Compra).delete()
-    d.query(Despesa).delete()
-    d.query(Encomenda).delete()
-    d.query(Historico).delete()
-    d.query(Log).delete()
-    d.query(Fornecedor).delete()
-    d.query(User).filter(User.id != a.id).delete()
-    d.commit()
+    if not ok: raise HTTPException(401, "Senha do Admin errada!")
+    d.query(Venda).delete(); d.query(Compra).delete(); d.query(Despesa).delete(); d.query(Encomenda).delete(); d.query(Historico).delete(); d.query(Log).delete(); d.query(Fornecedor).delete(); d.query(User).filter(User.id != a.id).delete(); d.commit()
     for f in [("Farinha Matola","841234567","Farinha 50kg",1800,"Matola"),("Ovos Maputo","849876543","Ovos 30 un",900,"Maputo"),("Açúcar Matola","842222333","Açúcar 25kg",1500,"Matola")]:
         d.add(Fornecedor(nome=f[0], telefone=f[1], produto=f[2], preco=f[3], localizacao=f[4]))
-    d.commit()
-    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_sistema", detalhe="Sistema limpo para venda"))
-    d.commit()
+    d.commit(); d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_sistema", detalhe="Sistema limpo para venda")); d.commit()
     return {"ok": True, "msg": "Sistema limpo! Pronto para vender. Produtos mantidos, vendas a 0 MT."}
 @app.post("/api/admin/limpar-vendas")
 def limpar_so_vendas(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    if x.confirmar.strip().upper() != "LIMPAR":
-        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Escreve LIMPAR para confirmar.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
-    if not ok:
-        raise HTTPException(401, "Senha do Admin errada!")
-    d.query(Venda).delete()
-    d.query(Historico).delete()
-    d.query(Log).delete()
-    d.commit()
+    if not ok: raise HTTPException(401, "Senha do Admin errada!")
+    d.query(Venda).delete(); d.query(Historico).delete(); d.query(Log).delete(); d.commit()
     return {"ok": True, "msg": "Só vendas / histórico apagados. Produtos e pessoas mantidos."}
 @app.post("/api/admin/limpar-ultimas-vendas")
 def limpar_ultimas_vendas(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    if x.confirmar.strip().upper() != "LIMPAR":
-        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Escreve LIMPAR para confirmar.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Senha do Admin errada!")
-    n = d.query(Venda).count()
-    d.query(Venda).delete()
-    d.query(Historico).filter(Historico.motivo=="VENDA").delete()
-    d.commit()
-    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_vendas", detalhe=f"Apagou {n} vendas")); d.commit()
+    n = d.query(Venda).count(); d.query(Venda).delete(); d.query(Historico).filter(Historico.motivo=="VENDA").delete(); d.commit(); d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_vendas", detalhe=f"Apagou {n} vendas")); d.commit()
     return {"ok": True, "msg": f"{n} últimas vendas apagadas! Dashboard a 0."}
 @app.post("/api/admin/limpar-ultimas-compras")
 def limpar_ultimas_compras(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    if x.confirmar.strip().upper() != "LIMPAR":
-        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Escreve LIMPAR para confirmar.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Senha do Admin errada!")
-    n = d.query(Compra).count()
-    d.query(Compra).delete()
-    d.query(Historico).filter(Historico.motivo=="COMPRA").delete()
-    d.commit()
-    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_compras", detalhe=f"Apagou {n} compras")); d.commit()
+    n = d.query(Compra).count(); d.query(Compra).delete(); d.query(Historico).filter(Historico.motivo=="COMPRA").delete(); d.commit(); d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_compras", detalhe=f"Apagou {n} compras")); d.commit()
     return {"ok": True, "msg": f"{n} últimas compras apagadas!"}
 @app.post("/api/admin/limpar-fluxo")
 def limpar_fluxo(x: LimparIn, a: User = Depends(admin_only), d: Session = Depends(dbdep)):
-    if x.confirmar.strip().upper() != "LIMPAR":
-        raise HTTPException(400, "Escreve LIMPAR para confirmar.")
+    if x.confirmar.strip().upper() != "LIMPAR": raise HTTPException(400, "Escreve LIMPAR para confirmar.")
     try: ok = pwd.verify(x.senha_admin, a.password_hash)
     except Exception: ok = False
     if not ok: raise HTTPException(401, "Senha do Admin errada!")
-    n = d.query(Log).count()
-    d.query(Log).delete()
-    d.commit()
-    d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_fluxo", detalhe="Fluxo Quem fez o quê limpo")); d.commit()
+    n = d.query(Log).count(); d.query(Log).delete(); d.commit(); d.add(Log(quem=a.nome, tipo="Admin", acao="limpar_fluxo", detalhe="Fluxo Quem fez o quê limpo")); d.commit()
     return {"ok": True, "msg": f"Fluxo limpo! {n} registos de 'Quem fez o quê' apagados."}
 @app.get("/api/historico")
 def get_historico(d: Session = Depends(dbdep), u: User = Depends(funcionario_only)):
