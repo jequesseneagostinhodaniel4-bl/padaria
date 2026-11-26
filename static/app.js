@@ -1,4 +1,4 @@
-// PADARIA JEQUESSENE - v21 FINAL - PERMISSOES CERTAS + FICHA + PONTOS + CANCELAR
+
 let token = localStorage.getItem('token') || '';
 let ME = null, PRODS = [], EDIT_ID = null, FOTO_TEMP = '', FOTO_PERFIL = '';
 function H(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
@@ -88,7 +88,7 @@ function aplicarPermissoesCliente(){
     document.querySelectorAll('[data-so-admin="1"]').forEach(b=>b.remove());
   }
 }
-// ===== V21 - FICHA TECNICA + INGREDIENTES =====
+
 function addLinhaFicha(){
   const d=document.getElementById('fichaItens'); if(!d) return;
   d.innerHTML += `<div class="flex"><input placeholder="Ingrediente ex: Farinha" class="f-ing"><input type="number" placeholder="Qtd" class="f-qtd"><input placeholder="Kg/L/Un" class="f-un"><input type="number" placeholder="Custo MT" class="f-custo"></div>`;
