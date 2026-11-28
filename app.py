@@ -292,8 +292,15 @@ def home():
 def health():
     return {"status": "ok", "app": "PADARIA"}
 class Register(BaseModel):
-    nome: str; telefone: str; idade: int = 18; email: str = ""; foto: str = ""; pais: str = "Moçambique";```python
-    bairro: str = "Matola"; tipo: str = "Cliente"; password: str
+    nome: str
+    telefone: str
+    idade: int = 18
+    email: str = ""
+    foto: str = ""
+    pais: str = "Moçambique"
+    bairro: str = "Matola"
+    tipo: str = "Cliente"
+    password: str
 class Login(BaseModel):
     telefone: str; password: str
 class SwitchIn(BaseModel):
@@ -680,16 +687,4 @@ def dashboard(u: User = Depends(funcionario_only), d: Session = Depends(dbdep)):
     ult_vendas = sorted(vendas, key=lambda x: x.created_at, reverse=True)[:8]
     quem_comprou = [{"cliente": v.cliente, "foto": foto_cliente(v), "produto": v.produto, "qtd": v.qtd, "total": v.total, "pagamento": v.pagamento, "data": v.created_at.strftime("%d/%m %H:%M")} for v in ult_vendas]
     vendas_enc = [{"cliente": v.cliente, "foto": foto_cliente(v), "produto": v.produto, "total": v.total, "data": v.created_at.strftime("%d/%m %H:%M")} for v in vendas if v.pagamento == "Encomenda"]
-    return {"hoje": ult7[-1], "semana": {"vendas": sum(x["vendas"] for x in ult7), "lucro": sum(x["lucro"] for x in ult7)}, "mes": {"vendas": mes_vendas, "lucro": mes_lucro}, "meta": {"objetivo": META_MES, "atingido": mes_vendas, "pct": min(100, round(mes_vendas / META_MES * 100)) if META_MES else 0, "falta": max(0, META_MES - mes_vendas)}, "grafico": ult7, "mais_vendidos": [{"produto": k, "qtd": v} for k, v in mais], "por_pagamento": por_pag, "quem_comprou": quem_comprou, "vendas_encomendas": vendas_enc, "totais": {"clientes": len([x for x in users if x.tipo == "Cliente"]), "funcionarios": len([x for x in users if normalizar_tipo(x.tipo) == "Funcionário"]), "produtos": len(produtos), "vendas_total": sum(v.total for v in vendas), "lucro_liquido": sum(v.total for v in vendas) - sum(c.total for c in compras) - sum(x.valor for x in despesas), "dividas": sum(v.total for v in vendas if v.estado == "Dívida")}}
-@app.get("/api/recibo/venda/{vid}")
-def recibo_venda_pdf(vid: int, d: Session = Depends(dbdep), u: User = Depends(funcionario_only)):
-    v = d.get(Venda, vid)
-    if not v:
-        raise HTTPException(404, "Não existe")
-    pdf = FPDF(); pdf.add_page(); pdf.set_font("Helvetica", "B", 18); pdf.cell(0, 12, "PADARIA JEQUESSENE", new_x="LMARGIN", new_y="NEXT", align="C")
-    pdf.set_font("Helvetica", "", 11); pdf.cell(0, 8, f"Recibo Venda #{vid} - {v.created_at.strftime('%d/%m/%Y %H:%M')}", new_x="LMARGIN", new_y="NEXT", align="C")
-    pdf.cell(0, 8, f"Cliente: {v.cliente} | Vendedor: {v.vendedor}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 8, f"Produto: {v.produto} x{v.qtd} | Pagamento: {v.pagamento} | Estado: {v.estado}", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("Helvetica", "B", 14); pdf.cell(0, 12, f"TOTAL: {v.total} MT | Lucro: {v.lucro} MT", new_x="LMARGIN", new_y="NEXT")
-    out = bytes(pdf.output())
-    return Response(content=out
+    return {"hoje": ult7[-1], "sem
